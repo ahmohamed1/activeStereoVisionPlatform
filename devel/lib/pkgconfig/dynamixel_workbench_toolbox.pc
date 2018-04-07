@@ -1,0 +1,8 @@
+prefix=/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel
+
+Name: dynamixel_workbench_toolbox
+Description: Description of dynamixel_workbench_toolbox
+Version: 0.1.8
+Cflags: -I/home/abdulla/dev/Active-stereo-Vision-Platform/ros/src/dynamixel-workbench/dynamixel_workbench_toolbox/include/dynamixel_workbench
+Libs: -L/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel/lib -ldynamixel_workbench_toolbox
+Requires: roscpp dynamixel_sdk

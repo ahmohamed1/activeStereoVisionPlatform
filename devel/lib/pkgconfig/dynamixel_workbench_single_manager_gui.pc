@@ -1,0 +1,8 @@
+prefix=/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel
+
+Name: dynamixel_workbench_single_manager_gui
+Description: Description of dynamixel_workbench_single_manager_gui
+Version: 0.1.8
+Cflags: -I/home/abdulla/dev/Active-stereo-Vision-Platform/ros/src/dynamixel-workbench/dynamixel_workbench_single_manager_gui/include
+Libs: -L/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel/lib 
+Requires: qt_build roscpp dynamixel_workbench_msgs dynamixel_workbench_toolbox

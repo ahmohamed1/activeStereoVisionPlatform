@@ -1,0 +1,22 @@
+<!-- ///-->
+
+<launch>
+
+<!-- run the object tracking node and ramp the names-->
+<node name="left_object_tracking" pkg="alphabot_vision" type="object_tracking">
+<remap from="/image_raw" to="/stereo/left/image_raw"/>
+<remap from="/move" to="/left/pan/move"/>
+<!--parm name="global_name" default="left" /-->
+</node>
+
+
+<!-- run the object tracking node and ramp the names-->
+<node name="right_object_tracking" pkg="alphabot_vision" type="object_tracking">
+<remap from="/image_raw" to="/stereo/right/image_raw"/>
+<remap from="/move" to="/right/pan/move"/>
+<!--parm name="global_name" default="right" /-->
+</node>
+
+
+
+</launch>

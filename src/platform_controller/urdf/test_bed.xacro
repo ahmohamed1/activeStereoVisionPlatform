@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<robot name="testbed" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+
+<xacro:include filename="$(find platform_controller)/urdf/sensors/kinect.urdf.xacro" />
+<xacro:include filename="$(find platform_controller)/urdf/sensors/xtion_pro_live.urdf.xacro" />
+
+<xacro:property name="dia" value="0.08"/>
+
+<xacro:property name="Distance_to_ball" value="1.2"/>
+
+<link name="base_link">
+    <inertial>
+      <mass value="1"/>
+      <origin xyz="1.2 0 0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
+      <geometry>
+        <box size="3 3 0.001"/>
+      </geometry>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="1.2 0 0"/>
+      <geometry>
+        <box size="3 3 0.001"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <gazebo reference="base_link">
+    <turnGravityOff>true</turnGravityOff>
+  </gazebo>
+
+
+  <xacro:sensor_kinect
+    parent="base_link">
+  </xacro:sensor_kinect>
+
+
+  <link name="ball_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 ${-dia/2}"/>
+      <geometry>
+        <sphere radius="${dia/2}"/>
+      </geometry>
+      <material name="Black"/>q
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="${dia/2}"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <origin xyz="${dia/2} ${dia/2} ${dia/2}"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <joint name="caster_front_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="ball_link"/>
+    <origin rpy="0 0 0" xyz="${Distance_to_ball} 0.0 1"/>
+  </joint>
+
+  <gazebo reference="ball_link">
+    <turnGravityOff>true</turnGravityOff>
+  </gazebo>
+
+
+  <!-- ros_control plugin -->
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/testbed</robotNamespace>
+    </plugin>
+  </gazebo>
+
+
+
+</robot>

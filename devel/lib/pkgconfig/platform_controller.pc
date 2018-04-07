@@ -1,0 +1,8 @@
+prefix=/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel
+
+Name: platform_controller
+Description: Description of platform_controller
+Version: 0.0.0
+Cflags: -I/home/abdulla/dev/Active-stereo-Vision-Platform/ros/src/platform_controller/include
+Libs: -L/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel/lib -lmainwindow
+Requires: 

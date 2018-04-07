@@ -1,0 +1,8 @@
+prefix=/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel
+
+Name: dynamixel_workbench_operators
+Description: Description of dynamixel_workbench_operators
+Version: 0.1.8
+Cflags: 
+Libs: -L/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel/lib -ldynamixel_workbench_operators
+Requires: roscpp dynamixel_workbench_msgs

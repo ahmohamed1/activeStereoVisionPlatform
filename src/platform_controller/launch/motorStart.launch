@@ -1,0 +1,42 @@
+<!-- -->
+<launch>
+
+<!-- start the arduino communication with baseline-->
+<node name="serial_node_one" pkg="rosserial_python" type="serial_node.py">
+<rosparam file="$(find platform_controller)/param/arduino1.yaml" command="load" />
+  </node>
+
+<!-- with tilt motors-->
+  <node name="arbotix" pkg="arbotix_python" type="arbotix_driver" output="screen">
+      <rosparam file="$(find arbotix_python)/config/motors.yaml" command="load" />
+  </node>
+
+  <node name="control_tilt_motors" pkg="platform_controller" type="control_tilt_motors" output="screen"/>
+
+
+	<!-- start pan motors-->
+        <arg name="device_name"                default="/dev/usb2dynamixel"/>
+        <arg name="baud_rate"                  default="1000000"/>
+
+        <arg name="scan_range"                 default="10"/>
+
+        <arg name="profile_velocity"           default="100"/>
+        <arg name="profile_acceleration"       default="60"/>
+
+        <param name="device_name"              value="$(arg device_name)"/>
+        <param name="baud_rate"                value="$(arg baud_rate)"/>
+
+        <param name="scan_range"               value="$(arg scan_range)"/>
+
+        <param name="profile_velocity"         value="$(arg profile_velocity)"/>
+        <param name="profile_acceleration"     value="$(arg profile_acceleration)"/>
+
+        <node name="position_control" pkg="dynamixel_workbench_controllers" type="position_control" required="true" output="screen"/>
+
+
+<!-- start the controller node -->
+<!--node name="platform_controller_gui" pkg="platform_controller" type="platform_controller.py" /-->
+
+
+
+</launch>

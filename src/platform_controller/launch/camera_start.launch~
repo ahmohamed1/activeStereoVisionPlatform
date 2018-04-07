@@ -1,0 +1,17 @@
+<!-- -->
+
+<launch>
+
+<include name="left_cam" pkg="pointgrey_camera_driver" 
+
+
+
+
+
+
+
+
+
+
+
+</launch>

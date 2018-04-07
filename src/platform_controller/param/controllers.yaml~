@@ -1,0 +1,9 @@
+platform_controller:
+  type: "position_controllers/JointTrajectoryController"
+  joints:
+    -baseline_left_joint
+    -baseline_right_joint
+    -right_cam_pan_joint
+    -right_cam_tilt_joint
+    -left_cam_pan_joint
+    -left_cam_tilt_joint
