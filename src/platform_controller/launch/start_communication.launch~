@@ -1,0 +1,26 @@
+<launch>
+
+  <!-- change this next line to include the launch file for your robot's hardware drivers: -->
+
+ <!--arg name="platform" default="$(find xacro)/xacro.py '$(find platform_controller)/urdf/platform.xacro'" /-->
+
+<!-- start the arduino communication -->
+<node name="serial_node_one" pkg="rosserial_python" type="serial_node.py">
+<rosparam file="$(find platform_controller)/param/arduino1.yaml" command="load" />
+  </node>
+ 
+<node name="serial_node_two" pkg="rosserial_python" type="serial_node.py">
+<rosparam file="$(find platform_controller)/param/arduino2.yaml" command="load" />
+  </node>
+
+<node name="serial_node_three" pkg="rosserial_python" type="serial_node.py">
+<rosparam file="$(find platform_controller)/param/arduino3.yaml" command="load" />
+  </node>
+
+
+<!--node name="tf_publish" pkg="platform_controller" type="tf_publish" /-->
+<!--node name="state_publisher" pkg="platform_controller" type="platform_joint_pub" /-->
+
+
+
+</launch>

@@ -1,0 +1,8 @@
+prefix=/home/abdulla/dev/Active-stereo-Vision-Platform/ros/install
+
+Name: rosserial_python
+Description: Description of rosserial_python
+Version: 0.7.6
+Cflags: 
+Libs: -L/home/abdulla/dev/Active-stereo-Vision-Platform/ros/install/lib 
+Requires: 

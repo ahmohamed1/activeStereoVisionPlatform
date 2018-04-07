@@ -1,0 +1,242 @@
+<?xml version="1.0"?>
+<robot name="platform" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!-- Defining the inertial and joint transtion
+ -->
+   <xacro:macro name="inertial_matrix" params="mass">
+      <inertial>
+      	<mass value="${mass}" />
+        <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="0.5" iyz="0.0" izz="1.0" />
+      </inertial>
+   </xacro:macro>
+
+   <xacro:macro name="transmission_block" params="joint_name">
+	  <transmission name="tran1">
+	    <type>transmission_interface/SimpleTransmission</type>
+	    <joint name="${joint_name}">
+	      <hardwareInterface>PositionJointInterface</hardwareInterface>
+	    </joint>
+	    <actuator name="motor1">
+	      <hardwareInterface>PositionJointInterface</hardwareInterface>
+	      <mechanicalReduction>1</mechanicalReduction>
+	    </actuator>
+	  </transmission>
+   </xacro:macro>
+
+
+
+<!-- Defining the colors used in this robot -->
+  <material name="Black">
+    <color rgba="0.0 0.0 0.0 1.0"/>
+  </material>
+
+  <material name="Red">
+    <color rgba="0.8 0.0 0.0 1.0"/>
+  </material>
+
+  <material name="White">
+    <color rgba="1.0 1.0 1.0 1.0"/>
+  </material>
+
+  <material name="Green">
+    <color rgba="0 1.0 0 1.0"/>
+  </material>
+
+  <material name="Blue">
+    <color rgba="0.0 0.0 0.8 1.0"/>
+  </material>
+
+  <!-- PROPERTY LIST -->
+  <!--All units in m-kg-s-radians unit system -->
+  <property name="M_PI" value="3.1415926535897931" />
+
+
+
+<!--Define the rail-->
+  <link name="rail_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+          <box size="0.08 0.8 0.02"/>
+      </geometry>
+      <material name="Black" />
+    </visual>  
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0 " />
+      <geometry>
+
+          <box size="0.08 0.8 0.02"/>
+
+      </geometry>
+    </collision>     
+  </link>
+
+
+<!--Define the left camera holder-->
+  <link name="left_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+          <box size="0.072 0.087 0.075"/>
+      </geometry>
+      <material name="Red" />
+    </visual>  
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0 " />
+      <geometry>
+          <box size="0.072 0.087 0.075"/>
+      </geometry>
+    </collision>     
+  </link>
+
+ <joint name="baseline_left_joint" type="prismatic">
+      <parent link="rail_link"/>
+      <child link="left_link"/>
+      <limit effort="1000.0" lower="0.0" upper="0.25" velocity="2"/>
+      <axis xyz="0 1 0"/>
+      <origin xyz="0 0.0435 0.03525" rpy="0 0 0"/>
+    </joint>
+
+
+<!--Define the right camera holder-->
+  <link name="right_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+          <box size="0.072 0.087 0.075"/>
+      </geometry>
+      <material name="Red" />
+    </visual>  
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0 " />
+      <geometry>
+          <box size="0.072 0.087 0.075"/>
+      </geometry>
+    </collision>     
+  </link>
+
+ <joint name="baseline_right_joint" type="prismatic">
+      <parent link="rail_link"/>
+      <child link="right_link"/>
+      <limit effort="1000.0" lower="-0.25" upper="0.0" velocity="2"/>
+      <axis xyz="0 1 0"/>
+      <origin xyz="0 -0.0435 0.03525" rpy="0 0 0"/>
+      <mimic joint="baseline_left_joint" multiplier="-1.0" offset="0.0" />
+    </joint>
+
+
+<!--Define the left camera pan -->
+  <link name="left_pan_link">
+    <visual>
+      <origin xyz="0.0 0 0.0" rpy="0 0 0" />
+      <geometry>
+          <box size="0.01 0.010 0.010"/>
+      </geometry>
+      <material name="Red" />
+    </visual>  
+    <collision>
+      <origin xyz="0.0 0 0.0" rpy="0 0 0 " />
+      <geometry>
+          <box size="0.03 0.030 0.030"/>
+      </geometry>
+    </collision>     
+  </link>
+
+ <joint name="left_cam_pan_joint" type="revolute">
+      <parent link="left_link"/>
+      <child link="left_pan_link"/>
+      <axis xyz="0 0 1"/>
+      <origin xyz="0 0.0 0.065" rpy="0 0 0"/>
+      <limit effort="1.5" velocity="6.178465545" lower="-3.141593" upper="3.141593"/>
+    </joint>
+
+<!--Define the left camera tilt -->
+  <link name="left_camera_tilt_link">
+    <visual>
+      <origin xyz="0.035 0 0.0" rpy="0 0 0" />
+      <geometry>
+          <box size="0.1 0.030 0.030"/>
+      </geometry>
+      <material name="Black" />
+    </visual>  
+    <collision>
+      <origin xyz="0.035 0 0.0" rpy="0 0 0 " />
+      <geometry>
+          <box size="0.1 0.030 0.030"/>
+      </geometry>
+    </collision>     
+  </link>
+
+ <joint name="left_cam_tilt_joint" type="revolute">
+      <parent link="left_pan_link"/>
+      <child link="left_camera_tilt_link"/>
+      <axis xyz="0 1 0"/>
+      <origin xyz="0 0.0 0.0" rpy="0 0 0"/>
+      <limit effort="1.5" velocity="6.178465545" lower="-0.488692" upper="0.488692"/>
+    </joint>
+
+<!--Define the right camera pan -->
+  <link name="right_pan_link">
+    <visual>
+      <origin xyz="0.0 0 0.0" rpy="0 0 0" />
+      <geometry>
+          <box size="0.01 0.010 0.010"/>
+      </geometry>
+      <material name="Red" />
+    </visual>  
+    <collision>
+      <origin xyz="0.0 0 0.0" rpy="0 0 0 " />
+      <geometry>
+          <box size="0.01 0.010 0.010"/>
+      </geometry>
+    </collision>     
+  </link>
+
+ <joint name="right_cam_pan_joint" type="revolute">
+      <parent link="right_link"/>
+      <child link="right_pan_link"/>
+      <axis xyz="0 0 1"/>
+      <origin xyz="0 0.0 0.065" rpy="0 0 0"/>
+      <limit effort="1.5" velocity="6.178465545" lower="-3.141593" upper="3.141593"/>
+    </joint>
+
+<!--Define the right camera tilt -->
+  <link name="right_tilt_link">
+    <visual>
+      <origin xyz="0.035 0 0.0" rpy="0 0 0" />
+      <geometry>
+          <box size="0.1 0.030 0.030"/>
+      </geometry>
+      <material name="Black" />
+    </visual>  
+    <collision>
+      <origin xyz="0.035 0 0.0" rpy="0 0 0 " />
+      <geometry>
+          <box size="0.1 0.030 0.030"/>
+      </geometry>
+    </collision>     
+  </link>
+
+ <joint name="right_cam_tilt_joint" type="revolute">
+      <parent link="right_pan_link"/>
+      <child link="right_tilt_link"/>
+      <axis xyz="0 1 0"/>
+      <origin xyz="0 0.0 0.0" rpy="0 0 0"/>
+      <limit effort="1.5" velocity="6.178465545" lower="-0.488692" upper="0.488692"/>
+    </joint>
+
+<!--///////////////////////////////////////////////////////////////////////////-->
+<!--Define the joint transtions -->
+
+<xacro:transmission_block joint_name="baseline_left_joint"/>
+<xacro:transmission_block joint_name="baseline_right_joint"/>
+
+<xacro:transmission_block joint_name="right_cam_pan_joint"/>
+<xacro:transmission_block joint_name="right_cam_tilt_joint"/>
+
+<xacro:transmission_block joint_name="left_cam_tilt_joint"/>
+<xacro:transmission_block joint_name="left_cam_pan_joint"/>
+
+
+</robot>
+  

@@ -1,0 +1,10 @@
+<launch>
+
+<!-- run the object tracking node and ramp the names-->
+<node name="object_tracking" pkg="platform_controller" type="object_tracking">
+<remap from="/image_raw" to="/stereo/left/image_raw"/>
+<remap from="/move" to="/left/pan/move"/>
+<rosparam param="win_nam">1</rosparam>
+</node>
+
+</launch>

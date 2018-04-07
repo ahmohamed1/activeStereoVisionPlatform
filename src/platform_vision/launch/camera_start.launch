@@ -1,0 +1,19 @@
+<!-- -->
+
+<launch>
+
+<include file="$(find pointgrey_camera_driver)/launch/camera.launch">
+  <argm name ="serial"
+  <argm name="camera"   value="left"/> 
+
+
+
+
+
+
+
+
+
+
+
+</launch>

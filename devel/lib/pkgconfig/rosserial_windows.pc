@@ -1,0 +1,8 @@
+prefix=/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel
+
+Name: rosserial_windows
+Description: Description of rosserial_windows
+Version: 0.7.6
+Cflags: 
+Libs: -L/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel/lib 
+Requires: 

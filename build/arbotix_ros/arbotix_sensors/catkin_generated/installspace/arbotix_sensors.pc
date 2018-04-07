@@ -1,0 +1,8 @@
+prefix=/home/abdulla/dev/Active-stereo-Vision-Platform/ros/install
+
+Name: arbotix_sensors
+Description: Description of arbotix_sensors
+Version: 0.10.0
+Cflags: 
+Libs: -L/home/abdulla/dev/Active-stereo-Vision-Platform/ros/install/lib 
+Requires: 

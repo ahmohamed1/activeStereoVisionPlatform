@@ -1,0 +1,29 @@
+\subsubsection parameters ROS parameters
+
+Reads and maintains the following parameters on the ROS server
+
+- \b "~fps" : \b [double] Frames per second min: 1.0, default: 7.5, max: 240.0
+- \b "~video_mode" : \b [int] Video mode for camera min: 4, default: 23, max: 23
+- \b "~format7_mode" : \b [int] Camera modes for format 7 min: 0, default: 0, max: 8
+- \b "~width" : \b [int] ROI width min: 0, default: 0, max: 4096
+- \b "~height" : \b [int] ROI height min: 0, default: 0, max: 4096
+- \b "~pixel_format" : \b [int] Pixel format for format 7 min: 0, default: 0, max: 31
+- \b "~raw_bayer_output" : \b [bool] Enable raw bayer output in standard video mode Y8 and Y16 min: False, default: False, max: True
+- \b "~trigger_source" : \b [int] Specifies the trigger source min: -1, default: -1, max: 7
+- \b "~trigger_polarity" : \b [int] Trigger polarity min: 0, default: 0, max: 1
+- \b "~strobe_control" : \b [int] Specifies the stroble control min: -1, default: -1, max: 3
+- \b "~strobe_polarity" : \b [int] Strobe polarity min: 0, default: 0, max: 1
+- \b "~exposure" : \b [bool] Enable/disable exposure min: False, default: True, max: True
+- \b "~auto_exposure" : \b [bool] Automatically change exposure (Gain, IRis & Shutter control) min: False, default: True, max: True
+- \b "~exposure_value" : \b [double] Auto exposure value min: -10.0, default: 1.35, max: 10.0
+- \b "~auto_shutter" : \b [bool] Auomatically change shutter speed min: False, default: True, max: True
+- \b "~shutter_ms" : \b [double] Amount of time (in milliseconds) for the apeture to remain open min: 0.0, default: 0.0, max: 100.0
+- \b "~auto_gain" : \b [bool] Automatically change gain min: False, default: True, max: True
+- \b "~gain_db" : \b [double] Relative circuit gain min: 0.0, default: 0.0, max: 30.0
+- \b "~white_balance" : \b [bool] Enable/disable white balance min: False, default: False, max: True
+- \b "~auto_white_balance" : \b [bool] Automatically change white balance min: False, default: True, max: True
+- \b "~wb_blue" : \b [int] White balance blue component min: 0, default: 800, max: 1023
+- \b "~wb_red" : \b [int] White balance red component min: 0, default: 550, max: 1023
+- \b "~brightness" : \b [double] Black level offset min: 0.0, default: 0.0, max: 10.0
+- \b "~gamma" : \b [double] Gamma expansion exponent min: 0.5, default: 1.0, max: 4.0
+

@@ -1,0 +1,8 @@
+prefix=/home/abdulla/dev/Active-stereo-Vision-Platform/ros/install
+
+Name: saliency_map
+Description: Description of saliency_map
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/abdulla/dev/Active-stereo-Vision-Platform/ros/install/lib 
+Requires: 

@@ -1,0 +1,25 @@
+<!-- /// -->
+<launch>
+
+<group ns="Object_tracking" >
+<!-- run the object tracking node and ramp the names-->
+<node name="right_track_marker" pkg="platform_vision" type="track_marker">
+<remap from="/stereo/left/image_raw" to="/stereo/right/image_raw"/>
+<remap from="/left/pan/move" to="/right/pan/move"/>
+<param name="global_name" type="string" value="left"  />
+<arg name="global_name" default="right" />
+</node>
+
+<!-- run the object tracking node and ramp the names-->
+<node name="left_track_marker" pkg="platform_vision" type="track_marker">
+<remap from="/stereo/left/image_raw" to="/stereo/left/image_raw"/>
+<remap from="/left/pan/move" to="/left/pan/move"/>
+<param name="global_name" type="string" value="left"  />
+<arg name="global_name" default="left" />
+</node>
+</group>
+<!-- run the depth calculation node and ramp the names-->
+<node name="depth_based_verge" pkg="platform_controller" type="depth_based_verge"/>
+<node name="tf_publish" pkg="platform_controller" type="tf_publish"/>
+
+</launch>

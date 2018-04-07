@@ -1,0 +1,8 @@
+prefix=/home/abdulla/dev/Active-stereo-Vision-Platform/ros/install
+
+Name: camera_base
+Description: Description of camera_base
+Version: 0.0.2
+Cflags: -I/home/abdulla/dev/Active-stereo-Vision-Platform/ros/install/include
+Libs: -L/home/abdulla/dev/Active-stereo-Vision-Platform/ros/install/lib 
+Requires: camera_info_manager diagnostic_updater dynamic_reconfigure image_transport roscpp sensor_msgs

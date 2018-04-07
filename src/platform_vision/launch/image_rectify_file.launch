@@ -1,0 +1,13 @@
+<!-- ///-->
+
+<launch>
+<arg name="calibration_file_arg" default="001_used_data" />
+
+<!-- run the object tracking node and ramp the names-->
+<node name="rectify_image" pkg="platform_vision" type="rectify_image">
+<remap from="/stereo/left/image_raw" to="/stereo/left/image_raw"/>
+<remap from="/stereo/right/image_raw" to="/stereo/right/image_raw"/>
+<param name="calibration_file" value="$(arg calibration_file_arg)" />
+</node>
+
+</launch>

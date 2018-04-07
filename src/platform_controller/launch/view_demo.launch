@@ -1,0 +1,22 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+
+<arg name="model" />
+
+
+<!-- Parsing xacro and setting robot_description parameter -->
+<param name="robot_description" command="$(find xacro)/xacro.py $(find platform_controller)/urdf/platform.xacro" /> 
+
+<param name="use_gui" value="false"/>
+
+<!--node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+
+<node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" /-->
+
+<node name="rviz" pkg="rviz" type="rviz" args="-d $(find platform_controller)/urdf.rviz" required="true" />
+
+<rosparam file="$(find platform_controller)/param/controllers.yaml" command="load"/>
+<node name="controller_spawner" pkg="controller_manager" type="spawner" args="platform_controller"/>
+
+</launch>

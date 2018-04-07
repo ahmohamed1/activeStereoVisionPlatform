@@ -1,0 +1,16 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/abdulla/dev/Active-stereo-Vision-Platform/ros/src/flea3/src/flycapture/async_trigger.cpp
+unistd.h
+-
+iostream
+-
+flycapture/FlyCapture2.h
+-
+

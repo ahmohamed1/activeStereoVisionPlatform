@@ -1,0 +1,9 @@
+<!-- -->
+<launch>
+<node ns="$(arg camera)" pkg="stereo_image_proc" type="stereo_image_proc"
+name="stereo_image_proc" output="screen">
+<rosparam file="$(arg params_disparity)"/>
+</node>
+
+
+</launch>

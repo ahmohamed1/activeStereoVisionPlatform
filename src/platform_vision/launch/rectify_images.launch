@@ -1,0 +1,25 @@
+<!-- ///-->
+
+<launch>
+
+<!-- run the object tracking node and ramp the names-->
+<node name="platform_rectify_color_node" pkg="platform_vision" type="platform_rectify_node">
+<remap from="/stereo/left/image_raw" to="/stereo/left/image_raw"/>
+<remap from="/stereo/right/image_raw" to="/stereo/right/image_raw"/>
+<param name="image_type" value="rgb8" />
+</node>
+
+
+<!-- run the object tracking node and ramp the names-->
+<node name="platform_rectify_mono_node" pkg="platform_vision" type="platform_rectify_node">
+<remap from="/stereo/left/image_raw" to="/stereo/left/image_mono"/>
+<remap from="/stereo/right/image_raw" to="/stereo/right/image_mono"/>
+
+<remap from="stereo/left/image_rect_color" to="stereo/left/image_rect_mono"/>
+<remap from="stereo/right/image_rect_color" to="stereo/right/image_rect_mono"/>
+<param name="image_type" value="mono8" />
+</node>
+
+
+
+</launch>

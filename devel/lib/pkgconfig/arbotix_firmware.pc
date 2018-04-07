@@ -1,0 +1,8 @@
+prefix=/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel
+
+Name: arbotix_firmware
+Description: Description of arbotix_firmware
+Version: 0.10.0
+Cflags: 
+Libs: -L/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel/lib 
+Requires: 
