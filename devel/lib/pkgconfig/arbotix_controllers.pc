@@ -1,8 +1,0 @@
-prefix=/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel
-
-Name: arbotix_controllers
-Description: Description of arbotix_controllers
-Version: 0.10.0
-Cflags: 
-Libs: -L/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel/lib 
-Requires: 

@@ -1,8 +1,0 @@
-prefix=/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel
-
-Name: my_dynamixel_workbench_tutorial
-Description: Description of my_dynamixel_workbench_tutorial
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel/lib 
-Requires: 

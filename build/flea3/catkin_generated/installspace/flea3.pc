@@ -1,8 +1,0 @@
-prefix=/home/abdulla/dev/Active-stereo-Vision-Platform/ros/install
-
-Name: flea3
-Description: Description of flea3
-Version: 0.1.0
-Cflags: -I/home/abdulla/dev/Active-stereo-Vision-Platform/ros/install/include -I/usr/include
-Libs: -L/home/abdulla/dev/Active-stereo-Vision-Platform/ros/install/lib -lflea3 /usr/lib/libflycapture.so
-Requires: roscpp nodelet camera_base dynamic_reconfigure message_runtime

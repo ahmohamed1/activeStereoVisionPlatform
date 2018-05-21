@@ -1,8 +1,0 @@
-prefix=/home/abdulla/dev/Active-stereo-Vision-Platform/ros/install
-
-Name: dynamixel_workbench_controllers
-Description: Description of dynamixel_workbench_controllers
-Version: 0.1.8
-Cflags: -I/home/abdulla/dev/Active-stereo-Vision-Platform/ros/install/include
-Libs: -L/home/abdulla/dev/Active-stereo-Vision-Platform/ros/install/lib -ldynamixel_workbench_controllers
-Requires: roscpp dynamixel_workbench_msgs dynamixel_workbench_toolbox

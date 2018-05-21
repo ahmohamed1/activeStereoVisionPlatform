@@ -39,7 +39,7 @@ class TiltMotorController:
 		right = msg.position[1]
 		# print (left, right)
 		leftMotorState.data = self.rad2Deg(left)
-		rightMotorState.data = self.rad2Deg(right)
+		rightMotorState.data = self.rad2Deg(right-10)
 		self.leftMotorState_publisher.publish(leftMotorState)
 		self.rightMotorState_publisher.publish(rightMotorState)
 

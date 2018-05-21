@@ -11,9 +11,6 @@
       <rosparam file="$(find arbotix_python)/config/motors.yaml" command="load" />
   </node>
 
-  <node name="control_tilt_motors" pkg="platform_controller" type="control_tilt_motors" output="screen"/>
-
-
 	<!-- start pan motors-->
         <arg name="device_name"                default="/dev/usb2dynamixel"/>
         <arg name="baud_rate"                  default="1000000"/>
@@ -36,7 +33,7 @@
 
 <!-- start the controller node -->
 <!--node name="platform_controller_gui" pkg="platform_controller" type="platform_controller.py" /-->
-
+<node name="control_tilt_motors" pkg="platform_controller" type="control_tilt_motors" output="screen"/>
 
 
 </launch>

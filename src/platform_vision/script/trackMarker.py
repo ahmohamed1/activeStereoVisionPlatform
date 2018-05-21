@@ -29,12 +29,12 @@ class ProcessImageBasedColor:
         # self.val = 11
         # self.vah = 106
 
-        self.hul = 101
-        self.huh = 140
-        self.sal = 051
+        self.hul = 102
+        self.huh = 255
+        self.sal = 0
         self.sah = 255
         self.val = 0
-        self.vah = 40
+        self.vah = 255
 
         self.minimumAreaOfObject = 2000
         self.maximumAreaOfObject = 7000
@@ -150,7 +150,7 @@ class ProcessImageBasedColor:
 class ArucoFinder:
 
     def __init__(self):
-        # self.processImageBasedColor = ProcessImageBasedColor()
+        self.processImageBasedColor = ProcessImageBasedColor()
         self.TrackingData = [['time', 'speed', 'diff']]
         self.oldTime = 0.0
         self.timeDiff = 0.0
@@ -240,8 +240,8 @@ class ArucoFinder:
             rate.sleep()
             if self.image_state is True:
                 ## call the function
-                centerPoint = self.findAurco(self.image)
-                # centerPoint = self.processImageBasedColor.find_countor(self.image)
+                # centerPoint = self.findAurco(self.image)
+                centerPoint = self.processImageBasedColor.find_countor(self.image)
                 differences = self.calculateDifferences(centerPoint)
                 print ("diff: i%", differences)
                 self.moveMotor(differences[0])

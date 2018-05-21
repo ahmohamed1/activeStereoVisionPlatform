@@ -1,8 +1,0 @@
-prefix=/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel
-
-Name: rosserial_msgs
-Description: Description of rosserial_msgs
-Version: 0.7.6
-Cflags: -I/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel/include
-Libs: -L/home/abdulla/dev/Active-stereo-Vision-Platform/ros/devel/lib 
-Requires: message_runtime
