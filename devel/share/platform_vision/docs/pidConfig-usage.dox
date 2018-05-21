@@ -1,9 +1,0 @@
-\subsubsection usage Usage
-\verbatim
-<node name="fastMatchingPyramid" pkg="platform_vision" type="fastMatchingPyramid">
-  <param name="Kp" type="double" value="0.2" />
-  <param name="Ki" type="double" value="0.0" />
-  <param name="Kd" type="double" value="0.0" />
-</node>
-\endverbatim
-

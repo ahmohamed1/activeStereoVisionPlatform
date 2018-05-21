@@ -8,6 +8,11 @@ import numpy as np
 import math
 import graphics
 import time
+#Because of transformations
+import tf
+
+import tf2_ros
+import geometry_msgs.msg
 
 class DrawTrackingSystem:
     def __init__(self):
@@ -39,13 +44,33 @@ class DrawTrackingSystem:
         self.saveDataAble = False
         self.TrackingData = [['X','Y','Z']]
 
+        # self.pub_tf = rospy.Publisher("/tf", tf2_msgs.msg.TFMessage, queue_size=1)
+        self.br = tf2_ros.TransformBroadcaster()
+        self.t = geometry_msgs.msg.TransformStamped()
+        self.t.header.frame_id = "/camera_link"
+        self.t.header.stamp = rospy.Time.now()
+        self.t.child_frame_id = 'target_1'
+
+
+    def dynamicTFBroadcaster(self, _X, _Y,_Z):
+        self.t.header.stamp = rospy.Time.now()
+        self.t.transform.translation.x = _X/100
+        self.t.transform.translation.y = _Y/100
+        self.t.transform.translation.z = _Z/100
+
+        self.t.transform.rotation.x = 0.0
+        self.t.transform.rotation.y = 0.0
+        self.t.transform.rotation.z = 0.0
+        self.t.transform.rotation.w = 1.0
+
+        self.br.sendTransform(self.t)
+
     def publishPose(self, X, Y, Z):
         pose = Vector3()
         pose.x = X
         pose.y = Y
         pose.z = Z
         self.targetPositionPub.publish(pose)
-
 
     def __del__(self):
         self.win.close
@@ -94,15 +119,23 @@ class DrawTrackingSystem:
         XposR = (B/2) - RSS;
 
         # assinge the coordinate to the object position and publish the topic
-        self.targetX = XposR
-        # self.targetY = DR
-        self.targetY = (0.9346*(math.pow(DR,1.0214)))
+        if (AL > AR ):
+            self.targetX = XposL
+            # self.targetY = DR
+            self.targetY = (0.9346*(math.pow(DL,1.0214)))
+        else:
+            self.targetX = XposR
+            # self.targetY = DR
+            self.targetY = (0.9346*(math.pow(DR,1.0214)))
 
         x ,y, z = self.transformCoordinate(self.targetY, self.targetX, 0.0, -self.tiltingAngle)
-        print "X:", x , " Y:", y, " Z:", z
+
+        depthTan = B / (math.tan(self.deg2rad(AR)) + math.tan(self.deg2rad(AL)))
+        print "X:", x , " Y:", y, " Z:", z, "Depth Based Tan: ", depthTan
 
         self.publishPose(x,y,z)
-        
+        self.dynamicTFBroadcaster(x, y, z)
+
         if self.saveDataAble == True:
             self.TrackingData.append([x,y,z])
 
@@ -148,6 +181,8 @@ class DrawTrackingSystem:
         # Put text in the win
         coord = 'X:' + str("%.2f" % self.targetX) + ' Y:' + str("%.2f" % self.targetY)
         self.txt = graphics.Text(graphics.Point(self.targetX, self.targetY + 20), coord)
+        self.txt.setSize(20)
+        self.txt.setStyle("bold")
         self.txt.draw(self.win)
         # time.sleep(0.09)
 

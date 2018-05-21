@@ -1,8 +1,0 @@
-\subsubsection parameters ROS parameters
-
-Reads and maintains the following parameters on the ROS server
-
-- \b "~Kp" : \b [double] A proportional parameter min: 0.0, default: 0.2, max: 10.0
-- \b "~Ki" : \b [double] A integral parameter min: 0.0, default: 0.0, max: 0.001
-- \b "~Kd" : \b [double] A derivative parameter min: 0.0, default: 0.0, max: 1.0
-

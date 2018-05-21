@@ -22,8 +22,7 @@ VERBOSE = True
 DEBUG = True
 
 class FastMatchingPyramid:
-
-    def __init__(self):
+    def __init__(self, showImage = True, windowname = "Vergence controller image Slaver Camera"):
         # Define the publisher to the left motor
         # self.leftMotorPub = rospy.Publisher('/right/pan/move', Vector3, queue_size=2)
         self.leftMotorPub = rospy.Publisher('/right/pan/move', Float64, queue_size=2)
@@ -32,23 +31,23 @@ class FastMatchingPyramid:
         self.bridge = CvBridge()
 
         self.left_image = None
-        self.left_image_state = False
         self.right_image = None
-        self.right_image_state = False
         self.savenumber = 0
+        self.showImage = showImage
+        self.windowname = windowname
 
         self.pyramidLevel = 10
         self.imageSize = np.array([2048 , 1080])
-        self.templateSize = 80
+        self.templateSize = 200
         self.x1 = (self.imageSize[0]/2 - (self.templateSize/2))
         self.x2 = (self.imageSize[0]/2 + (self.templateSize/2))
         self.y1 = (self.imageSize[1]/2 - (self.templateSize/2))
         self.y2 = (self.imageSize[1]/2 + (self.templateSize/2))
 
-        self.exponatialGain = [0.003, 0.0035]
+        self.exponatialGain = [0.0025, 0.0035]
         self.mapExponatialValue = [0.2, 0.35]
-        self.motorMinLimit = -120
-        self.motorMaxLimit = 120
+        self.motorMinLimit = -75
+        self.motorMaxLimit = 75
         self.currentPos = [0.0, 0.0]
         self.stepDistance = 0.0001
         self.motorPos = [Float64(), Float64()]
@@ -65,12 +64,13 @@ class FastMatchingPyramid:
 
     def saveImage(self, templateImage):
         self.savenumber += 1
-        leftImgStr = str(self.savenumber) + 'template.jpg'
-        rightImgStr = str(self.savenumber) + 'right.jpg'
-        cv2.imwrite(leftImgStr, templateImage)
+        tempImgStr = '/home/abdulla/dev/Data/' + str(self.savenumber) + 'template.jpg'
+        leftImgStr = '/home/abdulla/dev/Data/' + str(self.savenumber) + 'left.jpg'
+        rightImgStr = '/home/abdulla/dev/Data/' + str(self.savenumber) + 'right.jpg'
+        cv2.imwrite(tempImgStr, templateImage)
         cv2.imwrite(rightImgStr, self.right_image)
+        cv2.imwrite(leftImgStr, self.left_image)
         print ('Image saved')
-
 
     def moveToZero(self):
         for i in range(10):
@@ -103,25 +103,24 @@ class FastMatchingPyramid:
     def convertROSToCV(self, data):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, 'bgr8')
-            return cv_image, True
+            return cv_image
         except CvBridgeError, e:
             print e
 
     def left_image_callback(self, data):
-        self.left_image, self.left_image_state = self.convertROSToCV(data)
+        self.left_image = self.convertROSToCV(data)
 
     def right_image_callback(self, data):
-        self.right_image, self.right_image_state = self.convertROSToCV(data)
+        self.right_image = self.convertROSToCV(data)
 
     def showImage(self):
         rate = rospy.Rate(10) # 10hz
         while not rospy.is_shutdown():
             rate.sleep()
-            if self.left_image_state is True and self.right_image_state is True :
+            if self.left_image is not None and self.right_image != None :
                 ## call the function
-                # right_image_with_rectangle = cv2.rectangle(self.right_image, (self.x1, self.y1) , (self.x2, self.y2), (0,0,255), 3)
                 template = self.left_image[self.y1:self.y2, self.x1:self.x2]
-                cv2.imshow("template image", template)
+                # cv2.imshow("template image", template)
                 # self.createWindows("left image", self.left_image)
                 # self.createWindows("right image", right_image_with_rectangle)
                 self.fastTemplateMatch(self.right_image, template, 7)
@@ -136,22 +135,22 @@ class FastMatchingPyramid:
         rate = rospy.Rate(60) # 10hz
         while not rospy.is_shutdown():
             rate.sleep()
-            if self.left_image_state is True and self.right_image_state is True :
+            if self.left_image is not None and self.right_image is not None :
                 ## call the function
                 # right_image_with_rectangle = cv2.rectangle(self.right_image, (self.x1, self.y1) , (self.x2, self.y2), (0,0,255), 3)
                 template = self.left_image[self.y1:self.y2, self.x1:self.x2]
-                cv2.imshow("template image", template)
-                # self.createWindows("left image", self.left_image)
+                if self.showImage:
+                    cv2.imshow("template image", template)
+                self.createWindows("left image", self.right_image)
                 centerPoint = self.fastTemplateMatch(self.right_image, template, self.pyramidLevel)
                 differences = self.calculateDifferences(centerPoint)
                 self.moveMotor(differences[0])
-                # timestamp = rospy.get_time()
-                # speed = self.PidController.update(differences[0], timestamp)
-                # self.PublishMotorAtSpeedRate(speed)
                 ikey = cv2.waitKey(3)
                 if ikey == ord('q'):
                     self.moveToZero()
                     exit()
+                if ikey == ord('s'):
+                    self.saveImage(template)
 
     def calculateDifferences(self, centerPoint):
         if centerPoint is not None:
@@ -231,12 +230,16 @@ class FastMatchingPyramid:
             # print("Found the template region: {} => {}".format(pt1,pt2))
             dst = refimg.copy()
             cv2.rectangle(dst, pt1, pt2, (0,255,0), 2)
-            self.createWindows("Result", dst, (900,600))
+            if self.showImage:
+                self.createWindows(self.windowname, dst, (900,600))
             return centerPoint
         else:
             print("Cannot find the template in the origin image!")
 
     def createWindows(self, imageName, imageToShow, WindowSize = (900,600)):
+        # lineSize = 20
+        # imageToShow = cv2.line(imageToShow,(self.imageSize[0]/2, self.imageSize[1]/2-lineSize),(self.imageSize[0]/2, self.imageSize[1]/2+lineSize),(0,0,255),2)
+        # imageToShow = cv2.line(imageToShow,(self.imageSize[0]/2-lineSize, self.imageSize[1]/2),(self.imageSize[0]/2+lineSize, self.imageSize[1]/2),(0,0,255),2)
         cv2.namedWindow(imageName, cv2.WINDOW_NORMAL)
         cv2.resizeWindow(imageName, WindowSize)
         cv2.imshow(imageName, imageToShow)

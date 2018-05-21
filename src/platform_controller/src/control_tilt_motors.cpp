@@ -12,6 +12,7 @@ class ControlTiltMotors{
 
 public:
   ControlTiltMotors(){
+    FirstStart = true;
     ros::NodeHandle nh;
     cout << "---------------------------------\n" << endl;
     cout << "Start Tilt Motors Controller\n" << endl;
@@ -30,8 +31,8 @@ public:
     leftMotorCurrentPublisher = nh.advertise<std_msgs::Float64>("/left/tilt/angle",5);
 
 
-    maximumAngle = 30;
-    minimumAngle = -30;
+    maximumAngle = 40;
+    minimumAngle = -40;
 
   }
 
@@ -81,7 +82,16 @@ public:
   }
 
   void startController(){
-
+    // 
+    // if(FirstStart){
+    //   ros::Duration(10).sleep();
+    //   std_msgs::Float64 rightAngle;
+    //   ROS_INFO("TILT MOTOR MOVE TO ZERO POSITION!!!");
+    //   rightAngle.data = radian2degree(0);
+    //   rightMotorCurrentPublisher.publish(rightAngle);
+    //   leftMotorCurrentPublisher.publish(rightAngle);
+    //   FirstStart = false;
+    // }
     ros::spin();
 
   }
@@ -90,7 +100,7 @@ private:
   ros::Subscriber BothMotorsSubscribe, MotorcurrentAngle;
   ros::Publisher rightMotorPublisher, leftMotorPublisher;
   ros::Publisher rightMotorCurrentPublisher, leftMotorCurrentPublisher;
-
+  bool FirstStart;
   float maximumAngle, minimumAngle;
 };
 

@@ -274,5 +274,5 @@ target_link_libraries(pointcloud_segmentation ${OpenCV_LIBS} ${catkin_LIBRARIES}
 add_executable(save_pointCloud src/save_pointCloud.cpp)
 target_link_libraries(save_pointCloud ${OpenCV_LIBS} ${catkin_LIBRARIES})
 
-add_executable(cross_corrolation_pyramid src/cross_corrolation_pyramid.cpp)
-target_link_libraries(cross_corrolation_pyramid ${OpenCV_LIBS} ${catkin_LIBRARIES})
+add_executable(structureFromMotion src/structureFromMotion.cpp)
+target_link_libraries(structureFromMotion ${OpenCV_LIBS} ${catkin_LIBRARIES})
