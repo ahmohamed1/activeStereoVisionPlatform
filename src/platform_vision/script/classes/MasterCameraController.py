@@ -24,9 +24,15 @@ DEBUG = True
 
 
 class MasterCameraController:
-    def __init__(self, algorithmForTracking, suspendMotor = True ,saveData=False):
+    def __init__(self, algorithmForTracking, suspendMotor = True ,saveData=False, ScaleDown=False):
         cv2.namedWindow('Master Camera', cv2.WINDOW_NORMAL)
-        self.imageSize = np.array([2048 , 1080])
+        self.ScaleDown = ScaleDown
+        if self.ScaleDown:
+            self.imageSize = np.array([ int(2048/2), int(1080/2)])
+            self.thresholdMotorController = np.array([20,5])
+        else:
+            self.imageSize = np.array([2048 , 1080])
+            self.thresholdMotorController = np.array([80,15])
         self.algorithmForTracking = algorithmForTracking
         self.suspendMotor = suspendMotor
         self.independedTiltMotor = True
@@ -44,12 +50,16 @@ class MasterCameraController:
 
         elif self.algorithmForTracking == 'colorWithPNCC':
             self.processImageBasedColor = trackByColor.ProcessImageBasedColor(self.imageSize, True)
-            self.PNCC = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel = 7, windowSize = 150, grayImage = False , showImage = True, oberatingName = 'Master  ')
+            self.PNCC = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel = 7, windowSize = 150,
+                                                 grayImage = False , showImage = True,drawDifferencesInImage= False,
+                                                 operatingName = 'Master  ')
             self.pyramidPNCCState = True
             self.TemplateList = []
 
         elif self.algorithmForTracking == 'PNCC':
-            self.PNCC = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel = 7, windowSize = 150, grayImage = False, showImage = True, oberatingName = 'Master  ')
+            self.PNCC = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel = 7, windowSize = 150,
+                                                grayImage = False, showImage = True,drawDifferencesInImage= False,
+                                                operatingName = 'Master  ')
             self.TemplateCenter = np.array([0,0])
 
 
@@ -114,7 +124,10 @@ class MasterCameraController:
     def convertROSToCV(self, data):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, 'bgr8')
-            return cv_image
+            if self.ScaleDown:
+                return cv2.resize(cv_image, (self.imageSize[0], self.imageSize[1]))
+            else:
+                return cv_image
         except CvBridgeError, e:
             print e
 
@@ -230,7 +243,7 @@ class MasterCameraController:
             if self.image is not None:
                 ## call the function
                 differences = self.trackObjectInImage(self.image)
-                # print ("diff: i%", differences)
+                print ("diff: i%", differences)
                 if self.suspendMotor:
                     self.moveMotor(differences[0])
                     # self.moveMotorSpeed(differences[0])
@@ -266,14 +279,14 @@ class MasterCameraController:
     def moveMotor(self,value):
         speed = 0
         speed = np.sign(-value) * math.exp(abs(value)*self.exponatialGain[0])*self.mapExponatialValue[0]
-        if abs(value) > 80 :
+        if abs(value) > self.thresholdMotorController[0] :
             self.currentPos[0] += speed
             self.motorPos[0].data = self.currentPos[0]
             # print("Motor speed: ", self.currentPos)
             if self.currentPos[0] < self.motorMaxLimit and self.currentPos[0] > self.motorMinLimit :
                 self.motorPublisher.publish(self.motorPos[0])
-        elif abs(value) <  80 and abs(value) >  20:
-            self.currentPos[0] -= value * 0.0015
+        elif abs(value) <  self.thresholdMotorController[0] and abs(value) >  self.thresholdMotorController[1]:
+            self.currentPos[0] -= value * 0.001
             self.motorPos[0].data = self.currentPos[0]
             # print("Motor speed: ", self.currentPos)
             self.motorPublisher.publish(self.motorPos[0])
@@ -284,22 +297,22 @@ class MasterCameraController:
             self.saveData.storeData(speed, value)
             self.saveData.checkSpeedRepetedlly(value)
 
-    def moveMotorSpeed(self, value):
-        speed = 0
-        speed = np.sign(value) * math.exp(abs(value)*self.exponatialGain[0])*self.mapExponatialValue[0]
-        if abs(speed) > 100 :
-            self.currentPos[0] = speed
-            self.motorPos[0].data = self.currentPos[0]
-            print("Motor speed: ", self.currentPos)
-            # if self.currentPos[0] < self.motorMaxLimit and self.currentPos[0] > self.motorMinLimit :
-            self.motorPublisher.publish(self.motorPos[0])
-        elif abs(speed) <  100 and abs(speed) >  10:
-            self.currentPos[0] = 80
-            self.motorPos[0].data = self.currentPos[0]
-            print("Motor speed: ", self.currentPos)
-            self.motorPublisher.publish(self.motorPos[0])
-        else:
-            print "Pan Center Position"
+    # def moveMotorSpeed(self, value):
+    #     speed = 0
+    #     speed = np.sign(value) * math.exp(abs(value)*self.exponatialGain[0])*self.mapExponatialValue[0]
+    #     if abs(speed) > 20 :
+    #         self.currentPos[0] = speed
+    #         self.motorPos[0].data = self.currentPos[0]
+    #         print("Motor speed: ", self.currentPos)
+    #         # if self.currentPos[0] < self.motorMaxLimit and self.currentPos[0] > self.motorMinLimit :
+    #         self.motorPublisher.publish(self.motorPos[0])
+    #     elif abs(speed) <  20 and abs(speed) >  10:
+    #         self.currentPos[0] = 80
+    #         self.motorPos[0].data = self.currentPos[0]
+    #         print("Motor speed: ", self.currentPos)
+    #         self.motorPublisher.publish(self.motorPos[0])
+    #     else:
+    #         print "Pan Center Position"
 
 
 
@@ -309,14 +322,14 @@ class MasterCameraController:
             TiltSpeed = np.sign(value) * math.exp(abs(value)*self.exponatialGain[1])*self.mapExponatialValue[1]
         else:
             TiltSpeed = np.sign(-value) * math.exp(abs(value)*self.exponatialGain[1])*self.mapExponatialValue[1]
-        if abs(value) > 40 :
+        if abs(value) > self.thresholdMotorController[0] :
             self.currentPos[1] += TiltSpeed
             self.motorPos[1].data = self.currentPos[1]
             # print("Motor speed: ", self.TiltCurrentPos)
             if self.currentPos[1] < self.motorMaxLimitTilt and self.currentPos[1] > self.motorMinLimitTilt :
                 self.tiltMotorPublisher.publish(self.motorPos[1])
-        elif abs(value) <  40 and abs(value) >  15:
-            self.currentPos[1] -= value * 0.0015
+        elif abs(value) <  self.thresholdMotorController[0] and abs(value) >  self.thresholdMotorController[1]+5:
+            self.currentPos[1] -= value * 0.001
             self.motorPos[1].data = self.currentPos[1]
             # print("Motor speed: ", self.TiltCurrentPos)
             self.tiltMotorPublisher.publish(self.motorPos[1])

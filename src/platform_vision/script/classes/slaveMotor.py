@@ -5,6 +5,7 @@ import cv2
 import sys
 import numpy as np
 import math
+import argparse
 
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Vector3
@@ -13,23 +14,25 @@ from cv_bridge import CvBridge, CvBridgeError
 from std_msgs.msg import UInt16
 from std_msgs.msg import Float64
 
+import os.path
 import PNCC
 
 VERBOSE = True
 DEBUG = True
 
 class SlaveCameraController:
-    def __init__(self, activeTilitController=False):
+    def __init__(self, activeTilitController=False, ScaleDown=False):
         cv2.namedWindow('Slave Camera', cv2.WINDOW_NORMAL)
         self.leftMotorPub = rospy.Publisher('/right/pan/move', Float64, queue_size=2)
         self.left_image_sub = rospy.Subscriber('/stereo/left/image_raw', Image, self.left_image_callback)
         self.right_image_sub = rospy.Subscriber('/stereo/right/image_raw', Image, self.right_image_callback)
         self.bridge = CvBridge()
 
+        self.fileExcite = False
         self.activeTilitController = activeTilitController
         if self.activeTilitController:
             self.slaveTiltMotorPub = rospy.Publisher('/right/tilt/move', Float64, queue_size=2)
-            
+
         self.motorMinLimitTilt = -37
         self.motorMaxLimitTilt = 37
 
@@ -38,9 +41,21 @@ class SlaveCameraController:
         self.savenumber = 0
 
         # Define the pyramid algorithm
-        self.imageSize = np.array([2048 , 1080])
-        self.templateSize = 120
-        self.fastMatchingPyramid = PNCC.FastMatchingPyramid(self.imageSize, 7, windowSize=self.templateSize, grayImage = False, showImage = True, oberatingName = 'Slave ')
+        self.ScaleDown = ScaleDown
+        if self.ScaleDown:
+            self.imageSize = np.array([640, 420])
+            self.templateSize = 51
+            self.thresholdMotorController = np.array([20,6])
+            pyramidLevel = 4
+        else:
+            self.imageSize = np.array([2048 , 1080])
+            self.templateSize = 80
+            self.thresholdMotorController = np.array([80,15])
+            pyramidLevel = 7
+        self.fastMatchingPyramid = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel=pyramidLevel,
+                                                            windowSize=self.templateSize, grayImage = False,
+                                                            showImage = True,drawDifferencesInImage= True,
+                                                            operatingName = 'Slave ')
 
         self.exponatialGain = [0.0025, 0.0035]
         self.mapExponatialValue = [0.3, 0.35]
@@ -65,6 +80,13 @@ class SlaveCameraController:
         tempImgStr = '/home/abdulla/dev/Data/' + str(self.savenumber) + 'template.jpg'
         leftImgStr = '/home/abdulla/dev/Data/' + str(self.savenumber) + 'left.jpg'
         rightImgStr = '/home/abdulla/dev/Data/' + str(self.savenumber) + 'right.jpg'
+        self.fileExcite = os.path.isfile(tempImgStr)
+        while self.fileExcite:
+            self.savenumber += 1
+            tempImgStr = '/home/abdulla/dev/Data/' + str(self.savenumber) + 'template.jpg'
+            self.fileExcite = os.path.isfile(tempImgStr)
+            print (self.savenumber)
+
         cv2.imwrite(tempImgStr, templateImage)
         cv2.imwrite(rightImgStr, self.right_image)
         cv2.imwrite(leftImgStr, self.left_image)
@@ -87,14 +109,14 @@ class SlaveCameraController:
     def moveMotor(self,value):
         speed = 0
         speed = np.sign(-value) * math.exp(abs(value)*self.exponatialGain[0])*self.mapExponatialValue[0]
-        if abs(value) > 80 :
+        if abs(value) > self.thresholdMotorController[0] :
             self.currentPos[0] += speed
             self.motorPos[0].data = self.currentPos[0]
             # print("Motor speed: ", self.currentPos)
             if self.currentPos[0] < self.motorMaxLimit and self.currentPos[0] > self.motorMinLimit :
                 self.leftMotorPub.publish(self.motorPos[0])
-        elif abs(value) <  80 and abs(value) >  20:
-            self.currentPos[0] -= value * 0.0025
+        elif abs(value) <  self.thresholdMotorController[0] and abs(value) >  self.thresholdMotorController[1]:
+            self.currentPos[0] -= value * 0.001
             self.motorPos[0].data = self.currentPos[0]
             # print("Motor speed: ", self.currentPos)
             self.leftMotorPub.publish(self.motorPos[0])
@@ -105,14 +127,14 @@ class SlaveCameraController:
     def TiltMoveMotor(self,value):
         TiltSpeed = 0
         TiltSpeed = np.sign(-value) * math.exp(abs(value)*self.exponatialGain[1])*self.mapExponatialValue[1]
-        if abs(value) > 40 :
+        if abs(value) > self.thresholdMotorController[0] :
             self.currentPos[1] += TiltSpeed
             self.motorPos[1].data = self.currentPos[1]
             # print("Motor speed: ", self.TiltCurrentPos)
             if self.currentPos[1] < self.motorMaxLimitTilt and self.currentPos[1] > self.motorMinLimitTilt:
                 self.slaveTiltMotorPub.publish(self.motorPos[1])
-        elif abs(value) <  40 and abs(value) >  15:
-            self.currentPos[1] -= value * 0.0015
+        elif abs(value) <  self.thresholdMotorController[0] and abs(value) >  self.thresholdMotorController[1]:
+            self.currentPos[1] -= value * 0.001
             self.motorPos[1].data = self.currentPos[1]
             # print("Motor speed: ", self.TiltCurrentPos)
             self.slaveTiltMotorPub.publish(self.motorPos[1])
@@ -122,7 +144,10 @@ class SlaveCameraController:
     def convertROSToCV(self, data):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, 'bgr8')
-            return cv_image
+            if self.ScaleDown:
+                return cv2.resize(cv_image, (self.imageSize[0], self.imageSize[1]))
+            else:
+                return cv_image
         except CvBridgeError, e:
             print e
 
@@ -171,9 +196,16 @@ class SlaveCameraController:
         imgpyr.reverse()
         return imgpyr
 
-def main(args):
+
+ap = argparse.ArgumentParser(description='argument to control the slave controller!!')
+ap.add_argument('-s', '--scale', default=False, help='This use to control the size of the image process')
+
+args=vars(ap.parse_args())
+
+
+def main(scale):
     rospy.init_node('FastMatchingPyramid', anonymous = True)
-    slaveController = SlaveCameraController(activeTilitController=True)
+    slaveController = SlaveCameraController(activeTilitController=True, ScaleDown=scale)
     try:
         slaveController.trackObject()
         # rospy.spin()
@@ -184,4 +216,6 @@ def main(args):
     slaveController.moveToZero()
 
 if __name__ == '__main__':
-    main(sys.argv)
+    scale = args['scale']
+    print(scale)
+    main(scale)

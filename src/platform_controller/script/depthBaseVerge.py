@@ -76,13 +76,13 @@ class DrawTrackingSystem:
         self.win.close
 
     def baselineCallback(self, msg):
-        self.actualBaseline = (msg.data / 10) + 1
+        self.actualBaseline = (msg.data / 10) + 0.4
 
     def leftAngleCallback(self, msg):
-        self.leftAngle = msg.data - 0.5
+        self.leftAngle = round(msg.data,2) #- 0.5
 
     def rightAngleCallback(self, msg):
-        self.rightAngle = msg.data + 0.5
+        self.rightAngle = round(msg.data,2) #+ 0.5
 
 
     def tiltAngleCallback(self, msg):
@@ -121,17 +121,17 @@ class DrawTrackingSystem:
         # assinge the coordinate to the object position and publish the topic
         if (AL > AR ):
             self.targetX = XposL
-            # self.targetY = DR
-            self.targetY = (0.9346*(math.pow(DL,1.0214)))
+            self.targetY = DR
+            # self.targetY = (0.9346*(math.pow(DL,1.0214)))
         else:
             self.targetX = XposR
-            # self.targetY = DR
-            self.targetY = (0.9346*(math.pow(DR,1.0214)))
+            self.targetY = DR
+            # self.targetY = (0.9346*(math.pow(DR,1.0214)))
 
         x ,y, z = self.transformCoordinate(self.targetY, self.targetX, 0.0, -self.tiltingAngle)
 
-        depthTan = B / (math.tan(self.deg2rad(AR)) + math.tan(self.deg2rad(AL)))
-        print "X:", x , " Y:", y, " Z:", z, "Depth Based Tan: ", depthTan
+        # depthTan = B / (math.tan(self.deg2rad(AR)) + math.tan(self.deg2rad(AL)))
+        print "X:", x , " Y:", y, " Z:", z  #, "Depth Based Tan: ", depthTan
 
         self.publishPose(x,y,z)
         self.dynamicTFBroadcaster(x, y, z)

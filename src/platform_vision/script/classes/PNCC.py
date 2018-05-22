@@ -11,7 +11,7 @@ VERBOSE = True
 DEBUG = True
 
 class FastMatchingPyramid:
-    def __init__(self, imageSize, pyramidLevel = 7, windowSize = 80, grayImage = False, showImage = True, oberatingName='motor controller'):
+    def __init__(self, imageSize, pyramidLevel = 7, windowSize = 80, grayImage = False, showImage = True, drawDifferencesInImage=False, operatingName='motor controller'):
         self.pyramidLevel = pyramidLevel
         self.imageSize = imageSize
         self.templateSize = windowSize
@@ -21,10 +21,12 @@ class FastMatchingPyramid:
         self.y2 = (self.imageSize[1]/2 + (self.templateSize/2))
         self.showImage = showImage
         self.grayImage = grayImage
-        self.windowname = oberatingName
-        self.templateName = oberatingName + 'template'
+        self.windowname = operatingName
+        self.templateName = operatingName + 'template'
         self.template = None
-
+        self.drawDifferencesInImage = drawDifferencesInImage
+        if self.drawDifferencesInImage:
+            self.matchingLine = None
     def setgrayImage(grayImageState):
         self.grayImage = grayImageState
 
@@ -60,7 +62,7 @@ class FastMatchingPyramid:
         else:
             self.y1 = coordinate[1] - (self.templateSize/2)
             self.y2 = coordinate[1] + (self.templateSize/2)
-        print (self.x1, self.x2, self.y1, self.y2)
+        # print (self.x1, self.x2, self.y1, self.y2)
         self.template = leftImage[self.y1:self.y2, self.x1:self.x2]
         cv2.imshow(self.templateName, self.template)
         cv2.waitKey(1)
@@ -128,7 +130,7 @@ class FastMatchingPyramid:
         """
         results = []
 
-        if self.grayImage:
+        if src_refimg.shape[2] == 1:
             ## Change BGR to Grayscale
             gray_refimg = cv2.cvtColor(src_refimg, cv2.COLOR_BGR2GRAY)
             gray_tplimg = cv2.cvtColor(src_tplimg, cv2.COLOR_BGR2GRAY)
@@ -164,7 +166,13 @@ class FastMatchingPyramid:
 
             T, threshed = cv2.threshold(result, 0.90, 1., cv2.THRESH_TOZERO)
             results.append(threshed)
-
+        # self.createWindows("results", result, (900,600))
+        if self.drawDifferencesInImage:
+            rows = result.shape[0]
+            self.matchingLine = result[rows/2, :]
+            windowsizeExtra = np.full((self.templateSize/2),0.8)
+            self.matchingLine = np.hstack([windowsizeExtra, self.matchingLine])
+        # print (self.matchingLine)
         return threshed
         #return results
 
@@ -185,6 +193,10 @@ class FastMatchingPyramid:
             dst = refimg.copy()
             cv2.rectangle(dst, pt1, pt2, (0,255,0), 2)
             if self.showImage:
+                if self.drawDifferencesInImage:
+                    self.Xx = np.arange(self.matchingLine.size)
+                    pts = np.vstack((self.Xx,self.matchingLine*self.imageSize[1])).astype(np.int32).T
+                    dst = cv2.polylines(dst, [pts], isClosed=False, color=(255,255,255), thickness=2)
                 self.createWindows(self.windowname, dst, (900,600))
             return centerPoint
         else:
