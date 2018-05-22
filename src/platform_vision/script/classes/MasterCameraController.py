@@ -33,6 +33,7 @@ class MasterCameraController:
         else:
             self.imageSize = np.array([2048 , 1080])
             self.thresholdMotorController = np.array([80,15])
+
         self.algorithmForTracking = algorithmForTracking
         self.suspendMotor = suspendMotor
         self.independedTiltMotor = True
@@ -53,6 +54,7 @@ class MasterCameraController:
             self.PNCC = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel = 7, windowSize = 150,
                                                  grayImage = False , showImage = True,drawDifferencesInImage= False,
                                                  operatingName = 'Master  ')
+
             self.pyramidPNCCState = True
             self.TemplateList = []
 
@@ -60,6 +62,7 @@ class MasterCameraController:
             self.PNCC = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel = 7, windowSize = 150,
                                                 grayImage = False, showImage = True,drawDifferencesInImage= False,
                                                 operatingName = 'Master  ')
+
             self.TemplateCenter = np.array([0,0])
 
 
@@ -124,10 +127,12 @@ class MasterCameraController:
     def convertROSToCV(self, data):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, 'bgr8')
+
             if self.ScaleDown:
                 return cv2.resize(cv_image, (self.imageSize[0], self.imageSize[1]))
             else:
                 return cv_image
+
         except CvBridgeError, e:
             print e
 
@@ -244,6 +249,7 @@ class MasterCameraController:
                 ## call the function
                 differences = self.trackObjectInImage(self.image)
                 print ("diff: i%", differences)
+
                 if self.suspendMotor:
                     self.moveMotor(differences[0])
                     # self.moveMotorSpeed(differences[0])

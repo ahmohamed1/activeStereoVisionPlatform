@@ -5,7 +5,10 @@ import cv2
 import sys
 import numpy as np
 import math
+<<<<<<< HEAD
 import argparse
+=======
+>>>>>>> df78829fc5759e00b7c3023be6a30b0eac592d00
 
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Vector3
@@ -21,7 +24,7 @@ VERBOSE = True
 DEBUG = True
 
 class SlaveCameraController:
-    def __init__(self, activeTilitController=False, ScaleDown=False):
+    def __init__(self, activeTilitController=False):
         cv2.namedWindow('Slave Camera', cv2.WINDOW_NORMAL)
         self.leftMotorPub = rospy.Publisher('/right/pan/move', Float64, queue_size=2)
         self.left_image_sub = rospy.Subscriber('/stereo/left/image_raw', Image, self.left_image_callback)
