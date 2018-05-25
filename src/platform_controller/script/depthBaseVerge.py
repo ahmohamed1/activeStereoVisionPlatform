@@ -131,8 +131,8 @@ class DrawTrackingSystem:
         x ,y, z = self.transformCoordinate(self.targetY, self.targetX, 0.0, -self.tiltingAngle)
 
         # depthTan = B / (math.tan(self.deg2rad(AR)) + math.tan(self.deg2rad(AL)))
-        print "X:", round(x,2) , " Y:", round(y,2) , " Z:", round(z,2)# , " DR: ", round(DR,1), " DL: ", round(DL,1)#, "Depth Based Tan: ", depthTan
-
+        # print "X:", round(x,2) , " Y:", round(y,2) , " Z:", round(z,2)# , " DR: ", round(DR,1), " DL: ", round(DL,1)#, "Depth Based Tan: ", depthTan
+        print "XR:", round(XposR,2) , " YR:", round(DR,2), " XL:", round(XposL,2) , " YL:", round(DL,2)
         self.publishPose(x,y,z)
         self.dynamicTFBroadcaster(x, y, z)
 
@@ -181,7 +181,7 @@ class DrawTrackingSystem:
         # Put text in the win
         coord = 'X:' + str("%.2f" % self.targetX) + ' Y:' + str("%.2f" % self.targetY)
         self.txt = graphics.Text(graphics.Point(self.targetX, self.targetY + 20), coord)
-        self.txt.setSize(20)
+        self.txt.setSize(25)
         self.txt.setStyle("bold")
         self.txt.draw(self.win)
         # time.sleep(0.09)

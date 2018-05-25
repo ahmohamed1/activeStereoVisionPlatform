@@ -13,7 +13,7 @@ from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Vector3
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
-from std_msgs.msg import UInt16
+from std_msgs.msg import Int64
 from std_msgs.msg import Float64
 
 import os.path
@@ -28,6 +28,7 @@ class SlaveCameraController:
         self.leftMotorPub = rospy.Publisher('/right/pan/move', Float64, queue_size=2)
         self.left_image_sub = rospy.Subscriber('/stereo/left/image_raw', Image, self.left_image_callback)
         self.right_image_sub = rospy.Subscriber('/stereo/right/image_raw', Image, self.right_image_callback)
+        self.templateSizeSub = rospy.Subscriber('/templateSize', Int64, self.templateSizeCallBack)
         self.bridge = CvBridge()
 
         self.fileExcite = False
@@ -51,7 +52,7 @@ class SlaveCameraController:
             pyramidLevel = 4
         else:
             self.imageSize = np.array([2048 , 1080])
-            self.templateSize = 121
+            self.templateSize = 69
             self.thresholdMotorController = np.array([50,10])
             pyramidLevel = 7
         self.fastMatchingPyramid = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel=pyramidLevel,
@@ -85,6 +86,7 @@ class SlaveCameraController:
             self.currentPos = [0.0, 0.0]
             self.leftMotorPub.publish(self.motorPos[0])
             self.slaveTiltMotorPub.publish(self.motorPos[1])
+
 
     def saveImage(self, templateImage):
         self.savenumber += 1
@@ -172,6 +174,12 @@ class SlaveCameraController:
 
     def right_image_callback(self, data):
         self.right_image = self.convertROSToCV(data)
+
+    def templateSizeCallBack(self, data):
+        templateSize = data.data
+        self.fastMatchingPyramid.setTemplateSize(int(templateSize/1.8))
+
+
 
     def trackObject(self):
         rate = rospy.Rate(60) # 10hz

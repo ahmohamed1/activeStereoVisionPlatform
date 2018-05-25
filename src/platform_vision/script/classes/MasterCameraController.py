@@ -74,7 +74,10 @@ class MasterCameraController:
         self.image_sub = rospy.Subscriber('/stereo/left/image_color', Image, self.image_callback, queue_size=1) #/stereo/right/image_color
         self.bridge = CvBridge()
         self.image = None
-
+        # Publish the template Size limit
+        self.templateSizePub = rospy.Publisher('/templateSize', Int64, queue_size=5)
+        self.OldTemplateSize = 0
+        self.templateSizeLimits = 20
         #Motor Controller
         self.motorPublisher = rospy.Publisher("/left/pan/move", Float64, queue_size=10, latch=True)
         if self.independedTiltMotor:
@@ -143,6 +146,13 @@ class MasterCameraController:
         self.image = self.convertROSToCV(data)
         # print(self.image.shape)
 
+    def publishTemplateSize(self,size):
+        if size > self.OldTemplateSize + self.templateSizeLimits or size < self.OldTemplateSize - self.templateSizeLimits :
+            templateSize = Int64()
+            templateSize.data = size
+            self.templateSizePub.publish(templateSize)
+            self.OldTemplateSize = size
+
     def compute_avarge_around_most_interest(self, img, point, window_size=15):
         rectangule = img[point[0]-window_size:point[0]+window_size,point[1]-window_size:point[1]+window_size ]
         mean = rectangule.mean()
@@ -182,6 +192,7 @@ class MasterCameraController:
         elif self.algorithmForTracking == 'aruco':
             self.arucoTracking.setIdeaToTrack(self.ideatToTrack)
             centerPoint = self.arucoTracking.trackObject(image)
+            self.publishTemplateSize(int(self.arucoTracking.getTemplateSize()))
         elif self.algorithmForTracking == 'colorWithPNCC':
             centerPoint = self.trackObjectUsingPNCCandColor(image)
         elif self.algorithmForTracking == 'PNCC':
@@ -259,7 +270,7 @@ class MasterCameraController:
                     self.TiltMoveMotor(differences[1])
                 ikey = cv2.waitKey(3)
                 # self.createWindows('image', self.image)
-                if self.terminateButton == 5 :
+                if self.terminateButton == 2 :
                     break
                 if ikey == ord('q') : #or (self.sameNumber == 15 and self.saveDataAble == True):
                     # self.self.saveData.sameNumber = 0

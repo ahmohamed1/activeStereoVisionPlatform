@@ -32,14 +32,20 @@ class FastMatchingPyramid:
         self.terminateButton = False
 
     def my_mouse_callback(self, event,x,y,flags,param):
-        if event==cv2.EVENT_LBUTTONDOWN:
-            self.saveImage(self.fastMatchingPyramid.getTemplate())
-            pass
+        # if event==cv2.EVENT_LBUTTONDOWN:
+        #     self.saveImage(self.fastMatchingPyramid.getTemplate())
+        #     pass
         if event==cv2.EVENT_RBUTTONDOWN:
             self.terminateButton = True
 
     def getTerminatedState(self):
         return self.terminateButton
+
+    def getTemplateSize(self):
+        return self.templateSize
+
+    def setTemplateSize(self,size):
+        self.templateSize = size
 
 
     def setgrayImage(grayImageState):

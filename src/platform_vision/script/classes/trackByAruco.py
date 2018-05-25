@@ -11,10 +11,13 @@ class TrackByAruco:
     def __init__(self, imageSize):
         self.imageSize = imageSize
         self.ideatToTrack = 1
+        self.targetSize = None
 
     def setIdeaToTrack(self, ideatToTrack):
         self.ideatToTrack = ideatToTrack
 
+    def getTemplateSize(self):
+        return self.targetSize
 
     def trackObject(self, image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -39,6 +42,8 @@ class TrackByAruco:
         if len(markerCorners) > 0:
             centerPoint[0] = int((markerCorners[ide][0][1][0] + markerCorners[ide][0][2][0] + markerCorners[ide][0][3][0] + markerCorners[ide][0][0][0])/4)
             centerPoint[1] = int((markerCorners[ide][0][1][1] + markerCorners[ide][0][2][1] + markerCorners[ide][0][3][1] + markerCorners[ide][0][0][1])/4)
+            self.targetSize = abs(markerCorners[ide][0][0][0] - markerCorners[ide][0][2][0])
+            # print self.targetSize
         else:
             centerPoint = self.imageSize/2
         return centerPoint
