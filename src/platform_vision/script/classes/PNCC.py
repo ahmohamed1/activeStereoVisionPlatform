@@ -27,9 +27,23 @@ class FastMatchingPyramid:
         self.drawDifferencesInImage = drawDifferencesInImage
         if self.drawDifferencesInImage:
             self.matchingLine = None
+
+        cv2.namedWindow(self.windowname, cv2.WINDOW_NORMAL)
+        self.terminateButton = False
+
+    def my_mouse_callback(self, event,x,y,flags,param):
+        if event==cv2.EVENT_LBUTTONDOWN:
+            self.saveImage(self.fastMatchingPyramid.getTemplate())
+            pass
+        if event==cv2.EVENT_RBUTTONDOWN:
+            self.terminateButton = True
+
+    def getTerminatedState(self):
+        return self.terminateButton
+
+
     def setgrayImage(grayImageState):
         self.grayImage = grayImageState
-
 
     def saveImage(self, templateImage):
         self.savenumber += 1
@@ -64,8 +78,8 @@ class FastMatchingPyramid:
             self.y2 = coordinate[1] + (self.templateSize/2)
         # print (self.x1, self.x2, self.y1, self.y2)
         self.template = leftImage[self.y1:self.y2, self.x1:self.x2]
-        cv2.imshow(self.templateName, self.template)
-        cv2.waitKey(1)
+        # cv2.imshow(self.templateName, self.template)
+        # cv2.waitKey(1)
 
     def createMultipleTemplate(self, leftImage, centerList):
         templateList = []
@@ -128,6 +142,7 @@ class FastMatchingPyramid:
         """Do fast template matching using matchTemplate plus an approximation
         through pyramid construction to improve it's performance on large images.
         """
+        cv2.setMouseCallback(self.windowname, self.my_mouse_callback)
         results = []
 
         if src_refimg.shape[2] == 1:
@@ -164,9 +179,9 @@ class FastMatchingPyramid:
                     src = refimg[y:y+h+tH, x:x+w+tW]
                     result = cv2.matchTemplate(src, tplimg, cv2.TM_CCORR_NORMED)
 
-            T, threshed = cv2.threshold(result, 0.90, 1., cv2.THRESH_TOZERO)
+            T, threshed = cv2.threshold(result, 0.79, 1., cv2.THRESH_TOZERO)
             results.append(threshed)
-        # self.createWindows("results", result, (900,600))
+        # self.createWindows("results", threshed, (900,600))
         if self.drawDifferencesInImage:
             rows = result.shape[0]
             self.matchingLine = result[rows/2, :]
@@ -185,7 +200,7 @@ class FastMatchingPyramid:
 
         ## Analysis the result
         minval, maxval, minloc, maxloc = cv2.minMaxLoc(result)
-        if maxval > 0.9:
+        if maxval > 0.8:
             pt1 = maxloc
             pt2 = (maxloc[0] + tplimg.shape[1], maxloc[1] + tplimg.shape[0])
             centerPoint = (maxloc[0] + tplimg.shape[1]/2, maxloc[1] + tplimg.shape[0]/2)
@@ -197,6 +212,10 @@ class FastMatchingPyramid:
                     self.Xx = np.arange(self.matchingLine.size)
                     pts = np.vstack((self.Xx,self.matchingLine*self.imageSize[1])).astype(np.int32).T
                     dst = cv2.polylines(dst, [pts], isClosed=False, color=(255,255,255), thickness=2)
+                x_offset=y_offset=10
+                s_img = self.template
+                dst = cv2.rectangle(dst,(0,0),(s_img.shape[0]+y_offset,s_img.shape[0]+y_offset),(0,0,255),-1)
+                dst[y_offset:y_offset+s_img.shape[0], x_offset:x_offset+s_img.shape[1]] = s_img
                 self.createWindows(self.windowname, dst, (900,600))
             return centerPoint
         else:
@@ -206,7 +225,7 @@ class FastMatchingPyramid:
         lineSize = 20
         imageToShow = cv2.line(imageToShow,(self.imageSize[0]/2, self.imageSize[1]/2-lineSize),(self.imageSize[0]/2, self.imageSize[1]/2+lineSize),(0,0,255),2)
         imageToShow = cv2.line(imageToShow,(self.imageSize[0]/2-lineSize, self.imageSize[1]/2),(self.imageSize[0]/2+lineSize, self.imageSize[1]/2),(0,0,255),2)
-        cv2.namedWindow(imageName, cv2.WINDOW_NORMAL)
+        # cv2.namedWindow(imageName, cv2.WINDOW_NORMAL)
         cv2.resizeWindow(imageName, WindowSize)
         cv2.imshow(imageName, imageToShow)
         ikey = cv2.waitKey(1)

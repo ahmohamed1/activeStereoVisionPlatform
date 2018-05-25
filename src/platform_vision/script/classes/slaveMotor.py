@@ -5,10 +5,9 @@ import cv2
 import sys
 import numpy as np
 import math
-<<<<<<< HEAD
+
 import argparse
-=======
->>>>>>> df78829fc5759e00b7c3023be6a30b0eac592d00
+
 
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Vector3
@@ -24,7 +23,7 @@ VERBOSE = True
 DEBUG = True
 
 class SlaveCameraController:
-    def __init__(self, activeTilitController=False):
+    def __init__(self, activeTilitController=False, scaleDown = 0):
         cv2.namedWindow('Slave Camera', cv2.WINDOW_NORMAL)
         self.leftMotorPub = rospy.Publisher('/right/pan/move', Float64, queue_size=2)
         self.left_image_sub = rospy.Subscriber('/stereo/left/image_raw', Image, self.left_image_callback)
@@ -44,16 +43,16 @@ class SlaveCameraController:
         self.savenumber = 0
 
         # Define the pyramid algorithm
-        self.ScaleDown = ScaleDown
+        self.ScaleDown = scaleDown
         if self.ScaleDown:
-            self.imageSize = np.array([640, 420])
-            self.templateSize = 51
+            self.imageSize = np.array([920, 640])
+            self.templateSize = 71
             self.thresholdMotorController = np.array([20,6])
             pyramidLevel = 4
         else:
             self.imageSize = np.array([2048 , 1080])
-            self.templateSize = 80
-            self.thresholdMotorController = np.array([80,15])
+            self.templateSize = 121
+            self.thresholdMotorController = np.array([50,10])
             pyramidLevel = 7
         self.fastMatchingPyramid = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel=pyramidLevel,
                                                             windowSize=self.templateSize, grayImage = False,
@@ -67,16 +66,25 @@ class SlaveCameraController:
         self.currentPos = [0.0, 0.0]
         self.stepDistance = 0.0001
         self.motorPos = [Float64(), Float64()]
-        self.motorPos[0].data = self.currentPos[0]
-        self.motorPos[1].data = self.currentPos[1]
-        # set the motor to the zero position
-        self.leftMotorPub.publish(self.motorPos[0])
-
+        i = 0
+        r = rospy.Rate(10) # 10hz
+        while (i < 5):
+            self.motorPos[0].data = self.currentPos[0]
+            self.motorPos[1].data = self.currentPos[1]
+            # set the motor to the zero position
+            self.leftMotorPub.publish(self.motorPos[0])
+            self.slaveTiltMotorPub.publish(self.motorPos[1])
+            r.sleep()
+            i +=1
+        # sleep for 0.5 seconds
+        rospy.sleep(.5)
+        self.terminateButton = 1
 
     def __del__(self):
         for i in range(10):
-            self.motorPos.data = 0.0
-            self.motorPublisher.publish(self.motorPos)
+            self.currentPos = [0.0, 0.0]
+            self.leftMotorPub.publish(self.motorPos[0])
+            self.slaveTiltMotorPub.publish(self.motorPos[1])
 
     def saveImage(self, templateImage):
         self.savenumber += 1
@@ -99,14 +107,19 @@ class SlaveCameraController:
         if event==cv2.EVENT_LBUTTONDOWN:
             self.saveImage(self.fastMatchingPyramid.getTemplate())
             pass
+        if event==cv2.EVENT_RBUTTONDOWN:
+            self.terminateButton += 1
 
     def moveToZero(self):
+        print('Motor move to ZERO position!!!')
         for i in range(10):
             self.motorPos[0].data = 0.0
             self.motorPos[1].data = 0.0
             self.currentPos = [0.0, 0.0]
+            # set the motor to the zero position
             self.leftMotorPub.publish(self.motorPos[0])
-            self.leftMotorPub.publish(self.motorPos[1])
+            self.slaveTiltMotorPub.publish(self.motorPos[1])
+
 
 
     def moveMotor(self,value):
@@ -119,7 +132,7 @@ class SlaveCameraController:
             if self.currentPos[0] < self.motorMaxLimit and self.currentPos[0] > self.motorMinLimit :
                 self.leftMotorPub.publish(self.motorPos[0])
         elif abs(value) <  self.thresholdMotorController[0] and abs(value) >  self.thresholdMotorController[1]:
-            self.currentPos[0] -= value * 0.001
+            self.currentPos[0] -= value * 0.0015
             self.motorPos[0].data = self.currentPos[0]
             # print("Motor speed: ", self.currentPos)
             self.leftMotorPub.publish(self.motorPos[0])
@@ -177,8 +190,10 @@ class SlaveCameraController:
                 if ikey == ord('q'):
                     self.moveToZero()
                     exit()
-                if ikey == ord('s'):
+                elif ikey == ord('s'):
                     self.saveImage(self.fastMatchingPyramid.getTemplate())
+                if self.terminateButton == 2 or self.fastMatchingPyramid.getTerminatedState():
+                    break
 
     def calculateDifferences(self, centerPoint):
         if centerPoint is not None:
@@ -201,14 +216,14 @@ class SlaveCameraController:
 
 
 ap = argparse.ArgumentParser(description='argument to control the slave controller!!')
-ap.add_argument('-s', '--scale', default=False, help='This use to control the size of the image process')
+ap.add_argument('-s', '--scale',type=int, default=0, help='This use to control the size of the image process')
 
 args=vars(ap.parse_args())
 
-
+ScaleDown = args['scale']
 def main(scale):
     rospy.init_node('FastMatchingPyramid', anonymous = True)
-    slaveController = SlaveCameraController(activeTilitController=True, ScaleDown=scale)
+    slaveController = SlaveCameraController(activeTilitController=True, scaleDown=ScaleDown)
     try:
         slaveController.trackObject()
         # rospy.spin()

@@ -5,11 +5,7 @@
   <arg name="left_camera_calibrated" default="0" />
   <arg name="left_camera_serial" default="13242678" />
   <arg name="right_camera_calibrated" default="0" />
-<<<<<<< HEAD
   <arg name="frame_rate" default="30" />
-=======
-  <arg name="frame_rate" default="20" />
->>>>>>> df78829fc5759e00b7c3023be6a30b0eac592d00
   <arg name="mode" default="format7_mode4" />
 
   <node pkg="tf" type="static_transform_publisher" name="world_to_camera_link"

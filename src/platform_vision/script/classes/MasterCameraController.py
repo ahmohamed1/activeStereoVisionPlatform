@@ -32,7 +32,7 @@ class MasterCameraController:
             self.thresholdMotorController = np.array([20,5])
         else:
             self.imageSize = np.array([2048 , 1080])
-            self.thresholdMotorController = np.array([80,15])
+            self.thresholdMotorController = np.array([80,12])
 
         self.algorithmForTracking = algorithmForTracking
         self.suspendMotor = suspendMotor
@@ -59,7 +59,7 @@ class MasterCameraController:
             self.TemplateList = []
 
         elif self.algorithmForTracking == 'PNCC':
-            self.PNCC = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel = 7, windowSize = 150,
+            self.PNCC = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel = 7, windowSize = 100,
                                                 grayImage = False, showImage = True,drawDifferencesInImage= False,
                                                 operatingName = 'Master  ')
 
@@ -98,7 +98,7 @@ class MasterCameraController:
         # set the motor to the zero position
         # self.motorPublisher.publish(self.motorPos[0])
         # self.tiltMotorPublisher.publish(self.motorPos[1])
-
+        self.terminateButton = 0
     def __del__(self):
         for i in range(10):
             self.motorPos.data = 0.0
@@ -120,6 +120,9 @@ class MasterCameraController:
         if event==cv2.EVENT_LBUTTONDOWN:
             print x,y
             self.TemplateCenter = np.array([x , y])
+
+        if event==cv2.EVENT_RBUTTONDOWN:
+            self.terminateButton += 1
 
     def ideaToTrackCallback(self,data):
         self.ideatToTrack = data.data
@@ -256,6 +259,8 @@ class MasterCameraController:
                     self.TiltMoveMotor(differences[1])
                 ikey = cv2.waitKey(3)
                 # self.createWindows('image', self.image)
+                if self.terminateButton == 5 :
+                    break
                 if ikey == ord('q') : #or (self.sameNumber == 15 and self.saveDataAble == True):
                     # self.self.saveData.sameNumber = 0
                     break
@@ -320,22 +325,21 @@ class MasterCameraController:
     #     else:
     #         print "Pan Center Position"
 
-
-
     def TiltMoveMotor(self,value):
         TiltSpeed = 0
         if self.independedTiltMotor:
             TiltSpeed = np.sign(value) * math.exp(abs(value)*self.exponatialGain[1])*self.mapExponatialValue[1]
         else:
             TiltSpeed = np.sign(-value) * math.exp(abs(value)*self.exponatialGain[1])*self.mapExponatialValue[1]
+
         if abs(value) > self.thresholdMotorController[0] :
             self.currentPos[1] += TiltSpeed
             self.motorPos[1].data = self.currentPos[1]
             # print("Motor speed: ", self.TiltCurrentPos)
             if self.currentPos[1] < self.motorMaxLimitTilt and self.currentPos[1] > self.motorMinLimitTilt :
                 self.tiltMotorPublisher.publish(self.motorPos[1])
-        elif abs(value) <  self.thresholdMotorController[0] and abs(value) >  self.thresholdMotorController[1]+5:
-            self.currentPos[1] -= value * 0.001
+        elif abs(value) <  self.thresholdMotorController[0] and abs(value) >  self.thresholdMotorController[1]:
+            self.currentPos[1] += value * 0.001
             self.motorPos[1].data = self.currentPos[1]
             # print("Motor speed: ", self.TiltCurrentPos)
             self.tiltMotorPublisher.publish(self.motorPos[1])
