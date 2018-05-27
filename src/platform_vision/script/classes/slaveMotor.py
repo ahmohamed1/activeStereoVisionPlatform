@@ -57,17 +57,19 @@ class SlaveCameraController:
             self.scaleTemplate = 0.5
         else:
             self.imageSize = np.array([2048 , 1080])
-            self.templateSize = 101
+            self.templateSize = 121
             self.thresholdMotorController = np.array([50,10])
             pyramidLevel = 7
             self.scaleTemplate = 1.0
         self.algorithmToUse = algorithmToUse
+        self.featueMatchingAlgorithmState = False
         if self.algorithmToUse == 'PNCC':
             self.fastMatchingPyramid = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel=pyramidLevel,
                                                             windowSize=self.templateSize, grayImage = False,
                                                             showImage = True,drawDifferencesInImage= True,
                                                             operatingName = 'Slave ')
-        elif self.algorithmToUse == 'feature':
+        elif self.algorithmToUse == 'kaze' or self.algorithmToUse == 'FLANN' or self.algorithmToUse == 'Brute':
+            self.featueMatchingAlgorithmState = True
             self.trackingFeature = BaseFeatureMatching.BaseFeatureMatching()
 
 
@@ -200,10 +202,12 @@ class SlaveCameraController:
             # cv2.imshow("template image", self.fastMatchingPyramid.getTemplate())
             _img, centerPoint = self.fastMatchingPyramid.trackObject(image)
             cv2.imshow('Slave Camera', _img)
-        elif self.algorithmToUse == 'feature':
+        elif self.algorithmToUse == 'feature' or self.featueMatchingAlgorithmState:
             Size = self.templateSize
             template = template[self.imageSize[1]/2-Size:self.imageSize[1]/2+Size, self.imageSize[0]/2-Size:self.imageSize[0]/2+Size ]
-            _img, centerPoint = self.trackingFeature.BruteForceMatchingwithSIFTDescriptorsandRatioTest(template, image)
+            # _img, centerPoint = self.trackingFeature.BruteForceMatchingwithSIFTDescriptorsandRatioTest(template, image)
+            _img, centerPoint = self.trackingFeature.algorithmDictionary[self.algorithmToUse](template, image) # kaze, FLANN, Brute
+            # _img, centerPoint = self.trackingFeature.kaze_match(template, image)
             cv2.imshow('Slave Camera', _img)
         return centerPoint
     def trackObject(self):
@@ -213,7 +217,6 @@ class SlaveCameraController:
             rate.sleep()
             if self.left_image is not None and self.right_image is not None:
                 centerPoint = self.computeTheCenterUsingDifferentAlgorithm(self.left_image,self.right_image )
-                print (centerPoint)
                 differences = self.calculateDifferences(centerPoint)
                 self.moveMotor(differences[0])
                 if self.activeTilitController:
@@ -253,7 +256,7 @@ class SlaveCameraController:
 
 ap = argparse.ArgumentParser(description='argument to control the slave controller!!')
 ap.add_argument('-s', '--scale',type=int, default=0, help='This use to control the size of the image process')
-ap.add_argument('-a', '--algorithm', default= 'PNCC', help='Chosse the algorithm to use PNCC or feature')
+ap.add_argument('-a', '--algorithm', default= 'PNCC', help='Chosse the algorithm to use PNCC, kaze, FLANN, Brute ')
 
 args=vars(ap.parse_args())
 

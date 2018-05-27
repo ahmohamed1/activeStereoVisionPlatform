@@ -32,7 +32,7 @@
 
 
 <!-- start the controller node -->
-<!--node name="platform_controller_gui" pkg="platform_controller" type="platform_controller.py" /-->
+<node name="platform_controller_gui" pkg="platform_controller" type="platform_controller.py" />
 <node name="control_tilt_motors" pkg="platform_controller" type="control_tilt_motors" output="screen"/>
 
 

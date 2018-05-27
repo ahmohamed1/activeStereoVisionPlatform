@@ -66,7 +66,7 @@ class MasterCameraController:
                                                 operatingName = 'Master  ')
 
             self.TemplateCenter = np.array([0,0])
-
+            cv2.resizeWindow('Master Camera', (900,600))
 
 
         self.saveDataAble = saveData

@@ -6,29 +6,33 @@ import cv2
 
 class BaseFeatureMatching:
 
-    def __init__(self,):
+    def __init__(self,debug = False):
         print ('Feature matching algorithm')
+        self.debug = debug
+
+        self.algorithmDictionary = {'kaze': self.kaze_match,
+                                    'FLANN': self.FLANNBasedMatcher,
+                                    'Brute': self.BruteForceMatchingwithSIFTDescriptorsandRatioTest}
+
 
     def findCenterOfTarget(self, dst):
         a =  np.mean(dst, axis=0)
         return (a[0][0], a[0][1])
-    # def kaze_match(im1_path, im2_path):
+
+
     def kaze_match(self, img1, img2):
-        if img1.shape[2] == 1:
-            gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-            gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-        else:
-            gray1 = img1
-            gray2 = img2
+        center = None
+        gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+        gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
         # initialize the AKAZE descriptor, then detect keypoints and extract
         # local invariant descriptors from the image
         detector = cv2.AKAZE_create()
         (kp1, descs1) = detector.detectAndCompute(gray1, None)
         (kp2, descs2) = detector.detectAndCompute(gray2, None)
-
-        print("keypoints: {}, descriptors: {}".format(len(kp1), descs1.shape))
-        print("keypoints: {}, descriptors: {}".format(len(kp2), descs2.shape))
+        if self.debug:
+            print("keypoints: {}, descriptors: {}".format(len(kp1), descs1.shape))
+            print("keypoints: {}, descriptors: {}".format(len(kp2), descs2.shape))
 
         # Match the features
         bf = cv2.BFMatcher(cv2.NORM_HAMMING)
@@ -54,7 +58,7 @@ class BaseFeatureMatching:
             dst = cv2.perspectiveTransform(pts,M)
             # Find the center and draw the it
             center = self.findCenterOfTarget(dst)
-            img2 = cv2.circle(img2,(center[0], center[0]),10,  (255,0,0), -1)
+            img2 = cv2.circle(img2,(center[0], center[1]),10,  (255,0,0), -1)
             img2 = cv2.polylines(img2,[np.int32(dst)],True,255,3, cv2.LINE_AA)
 
         else:
@@ -67,18 +71,14 @@ class BaseFeatureMatching:
                            flags = 2)
         # cv2.drawMatchesKnn expects list of lists as matches.
         img3 = cv2.drawMatches(img1,kp1,img2,kp2,good,None)
-        cv2.imshow("AKAZE matching", img3)
-        cv2.waitKey(10)
-        return img3
+        cv2.putText(img3,'AKAZE matching',(img3.shape[0]//2,50), 1, 5,(0,0,0),5,cv2.LINE_AA)
+        return img3, center
 
     def FLANNBasedMatcher(self, img1,img2):
+        center = None
+        gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+        gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
-        if img1.shape[2] == 1:
-            gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-            gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-        else:
-            gray1 = img1
-            gray2 = img2
         # Initiate SIFT detector
         sift = cv2.xfeatures2d.SIFT_create()
 
@@ -126,9 +126,11 @@ class BaseFeatureMatching:
                            flags = 2)
 
         img3 = cv2.drawMatches(img1,kp1,img2,kp2,good,None,**draw_params)
-        cv2.imshow("FLANNBasedMatcher", img3)
-        cv2.waitKey(10)
-        return img3
+        cv2.putText(img3,'FLANNBasedMatcher',(img3.shape[0]//2,50), 1, 5,(0,0,0),5,cv2.LINE_AA)
+
+        # cv2.imshow("FLANNBasedMatcher", img3)
+        # cv2.waitKey(10)
+        return img3, center
 
 
     def BruteForceMatchingwithSIFTDescriptorsandRatioTest(self, img1,img2):
@@ -183,6 +185,7 @@ class BaseFeatureMatching:
         # cv2.drawMatchesKnn expects list of lists as matches.
         # img3 = cv2.drawMatchesKnn(img1,kp1,img2,kp2,good,None)
         img3 = cv2.drawMatches(img1,kp1,img2,kp2,good,None,**draw_params)
+        cv2.putText(img3,'BruteForceMatching',(img3.shape[0]//2,50), 1, 5,(0,0,0),5,cv2.LINE_AA)
         # cv2.imshow("Brute Force Matching", img3)
         # cv2.waitKey(3)
         return img3, center
