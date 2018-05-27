@@ -131,8 +131,8 @@ class DrawTrackingSystem:
         x ,y, z = self.transformCoordinate(self.targetY, self.targetX, 0.0, -self.tiltingAngle)
 
         # depthTan = B / (math.tan(self.deg2rad(AR)) + math.tan(self.deg2rad(AL)))
-        # print "X:", round(x,2) , " Y:", round(y,2) , " Z:", round(z,2)# , " DR: ", round(DR,1), " DL: ", round(DL,1)#, "Depth Based Tan: ", depthTan
-        print "XR:", round(XposR,2) , " YR:", round(DR,2), " XL:", round(XposL,2) , " YL:", round(DL,2)
+        print "X:", round(x,2) , " Y:", round(y,2) , " Z:", round(z,2)# , " DR: ", round(DR,1), " DL: ", round(DL,1)#, "Depth Based Tan: ", depthTan
+        # print "XR:", round(XposR,2) , " YR:", round(DR,2), " XL:", round(XposL,2) , " YL:", round(DL,2)
         self.publishPose(x,y,z)
         self.dynamicTFBroadcaster(x, y, z)
 

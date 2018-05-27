@@ -28,8 +28,9 @@ class FastMatchingPyramid:
         if self.drawDifferencesInImage:
             self.matchingLine = None
 
-        cv2.namedWindow(self.windowname, cv2.WINDOW_NORMAL)
-        self.terminateButton = False
+        if self.windowname != 'Slave ':
+            cv2.namedWindow(self.windowname, cv2.WINDOW_NORMAL)
+            self.terminateButton = False
 
     def my_mouse_callback(self, event,x,y,flags,param):
         # if event==cv2.EVENT_LBUTTONDOWN:
@@ -148,7 +149,8 @@ class FastMatchingPyramid:
         """Do fast template matching using matchTemplate plus an approximation
         through pyramid construction to improve it's performance on large images.
         """
-        cv2.setMouseCallback(self.windowname, self.my_mouse_callback)
+        if self.windowname != 'Slave ':
+            cv2.setMouseCallback(self.windowname, self.my_mouse_callback)
         results = []
 
         if src_refimg.shape[2] == 1:
@@ -218,12 +220,19 @@ class FastMatchingPyramid:
                     self.Xx = np.arange(self.matchingLine.size)
                     pts = np.vstack((self.Xx,self.matchingLine*self.imageSize[1])).astype(np.int32).T
                     dst = cv2.polylines(dst, [pts], isClosed=False, color=(255,255,255), thickness=2)
+                lineSize = 20
+                imageToShow = cv2.line(dst,(self.imageSize[0]/2, self.imageSize[1]/2-lineSize),(self.imageSize[0]/2, self.imageSize[1]/2+lineSize),(0,0,255),2)
+                imageToShow = cv2.line(dst,(self.imageSize[0]/2-lineSize, self.imageSize[1]/2),(self.imageSize[0]/2+lineSize, self.imageSize[1]/2),(0,0,255),2)
                 x_offset=y_offset=10
                 s_img = self.template
                 dst = cv2.rectangle(dst,(0,0),(s_img.shape[0]+y_offset,s_img.shape[0]+y_offset),(0,0,255),-1)
                 dst[y_offset:y_offset+s_img.shape[0], x_offset:x_offset+s_img.shape[1]] = s_img
-                self.createWindows(self.windowname, dst, (900,600))
-            return centerPoint
+                if self.windowname != 'Slave ':
+                    self.createWindows(self.windowname, dst, (900,600))
+            if self.windowname != 'Slave ':
+                return centerPoint
+            else :
+                return dst, centerPoint
         else:
             print("Cannot find the template in the origin image!")
 

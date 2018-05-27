@@ -30,9 +30,11 @@ class MasterCameraController:
         if self.ScaleDown:
             self.imageSize = np.array([ int(2048/2), int(1080/2)])
             self.thresholdMotorController = np.array([20,5])
+            self.pyramidLayer = 3
         else:
             self.imageSize = np.array([2048 , 1080])
             self.thresholdMotorController = np.array([80,12])
+            self.pyramidLayer = 7
 
         self.algorithmForTracking = algorithmForTracking
         self.suspendMotor = suspendMotor
@@ -51,7 +53,7 @@ class MasterCameraController:
 
         elif self.algorithmForTracking == 'colorWithPNCC':
             self.processImageBasedColor = trackByColor.ProcessImageBasedColor(self.imageSize, True)
-            self.PNCC = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel = 7, windowSize = 150,
+            self.PNCC = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel = self.pyramidLayer, windowSize = 150,
                                                  grayImage = False , showImage = True,drawDifferencesInImage= False,
                                                  operatingName = 'Master  ')
 
@@ -59,7 +61,7 @@ class MasterCameraController:
             self.TemplateList = []
 
         elif self.algorithmForTracking == 'PNCC':
-            self.PNCC = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel = 7, windowSize = 100,
+            self.PNCC = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel = self.pyramidLayer, windowSize = 51,
                                                 grayImage = False, showImage = True,drawDifferencesInImage= False,
                                                 operatingName = 'Master  ')
 
@@ -196,11 +198,14 @@ class MasterCameraController:
         elif self.algorithmForTracking == 'colorWithPNCC':
             centerPoint = self.trackObjectUsingPNCCandColor(image)
         elif self.algorithmForTracking == 'PNCC':
-            cv2.imshow('Master Camera', image)
             if self.TemplateCenter[0] != 0:
                 self.PNCC.createTemplate(image, self.TemplateCenter)
                 self.TemplateCenter = np.array([0, 0])
             centerPoint = self.PNCC.trackObject(image)
+            lineSize = 20
+            imageToShow = cv2.line(image,(self.imageSize[0]/2, self.imageSize[1]/2-lineSize),(self.imageSize[0]/2, self.imageSize[1]/2+lineSize),(0,0,255),2)
+            imageToShow = cv2.line(image,(self.imageSize[0]/2-lineSize, self.imageSize[1]/2),(self.imageSize[0]/2+lineSize, self.imageSize[1]/2),(0,0,255),2)
+            cv2.imshow('Master Camera', image)
         elif self.algorithmForTracking == 'saliency':
             img = cv2.resize(image, (640,420))
             saliency_img = self.saliencyMap.SMGetSM(img)

@@ -18,13 +18,16 @@ from std_msgs.msg import Float64
 
 import os.path
 import PNCC
+import BaseFeatureMatching
+
 
 VERBOSE = True
 DEBUG = True
 
 class SlaveCameraController:
-    def __init__(self, activeTilitController=False, scaleDown = 0):
+    def __init__(self, activeTilitController=False,algorithmToUse= 'PNCC', scaleDown = 0):
         cv2.namedWindow('Slave Camera', cv2.WINDOW_NORMAL)
+        cv2.resizeWindow('Slave Camera', (900,600))
         self.leftMotorPub = rospy.Publisher('/right/pan/move', Float64, queue_size=2)
         self.left_image_sub = rospy.Subscriber('/stereo/left/image_raw', Image, self.left_image_callback)
         self.right_image_sub = rospy.Subscriber('/stereo/right/image_raw', Image, self.right_image_callback)
@@ -46,25 +49,33 @@ class SlaveCameraController:
         # Define the pyramid algorithm
         self.ScaleDown = scaleDown
         if self.ScaleDown:
-            self.imageSize = np.array([920, 640])
-            self.templateSize = 71
+            # self.imageSize = np.array([920, 640])
+            self.imageSize = np.array([2048/2 , 1080/2])
+            self.templateSize = 35
             self.thresholdMotorController = np.array([20,6])
             pyramidLevel = 4
+            self.scaleTemplate = 0.5
         else:
             self.imageSize = np.array([2048 , 1080])
-            self.templateSize = 69
+            self.templateSize = 101
             self.thresholdMotorController = np.array([50,10])
             pyramidLevel = 7
-        self.fastMatchingPyramid = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel=pyramidLevel,
+            self.scaleTemplate = 1.0
+        self.algorithmToUse = algorithmToUse
+        if self.algorithmToUse == 'PNCC':
+            self.fastMatchingPyramid = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel=pyramidLevel,
                                                             windowSize=self.templateSize, grayImage = False,
                                                             showImage = True,drawDifferencesInImage= True,
                                                             operatingName = 'Slave ')
+        elif self.algorithmToUse == 'feature':
+            self.trackingFeature = BaseFeatureMatching.BaseFeatureMatching()
+
 
         self.exponatialGain = [0.0025, 0.0035]
         self.mapExponatialValue = [0.3, 0.35]
         self.motorMinLimit = -75
         self.motorMaxLimit = 75
-        self.currentPos = [0.0, 0.0]
+        self.currentPos = [-5.0, -6.0]
         self.stepDistance = 0.0001
         self.motorPos = [Float64(), Float64()]
         i = 0
@@ -107,7 +118,8 @@ class SlaveCameraController:
 
     def my_mouse_callback(self, event,x,y,flags,param):
         if event==cv2.EVENT_LBUTTONDOWN:
-            self.saveImage(self.fastMatchingPyramid.getTemplate())
+            if self.algorithmToUse == 'PNCC':
+                self.saveImage(self.fastMatchingPyramid.getTemplate())
             pass
         if event==cv2.EVENT_RBUTTONDOWN:
             self.terminateButton += 1
@@ -134,7 +146,7 @@ class SlaveCameraController:
             if self.currentPos[0] < self.motorMaxLimit and self.currentPos[0] > self.motorMinLimit :
                 self.leftMotorPub.publish(self.motorPos[0])
         elif abs(value) <  self.thresholdMotorController[0] and abs(value) >  self.thresholdMotorController[1]:
-            self.currentPos[0] -= value * 0.0015
+            self.currentPos[0] -= value * 0.001
             self.motorPos[0].data = self.currentPos[0]
             # print("Motor speed: ", self.currentPos)
             self.leftMotorPub.publish(self.motorPos[0])
@@ -177,19 +189,31 @@ class SlaveCameraController:
 
     def templateSizeCallBack(self, data):
         templateSize = data.data
-        self.fastMatchingPyramid.setTemplateSize(int(templateSize/1.8))
+        if self.algorithmToUse == 'PNCC':
+            self.fastMatchingPyramid.setTemplateSize(int((templateSize*self.scaleTemplate)/1.8))
 
 
-
+    def computeTheCenterUsingDifferentAlgorithm(self, template,image):
+        centerPoint = None
+        if self.algorithmToUse == 'PNCC':
+            self.fastMatchingPyramid.createTemplate(template, self.imageSize/2)
+            # cv2.imshow("template image", self.fastMatchingPyramid.getTemplate())
+            _img, centerPoint = self.fastMatchingPyramid.trackObject(image)
+            cv2.imshow('Slave Camera', _img)
+        elif self.algorithmToUse == 'feature':
+            Size = self.templateSize
+            template = template[self.imageSize[1]/2-Size:self.imageSize[1]/2+Size, self.imageSize[0]/2-Size:self.imageSize[0]/2+Size ]
+            _img, centerPoint = self.trackingFeature.BruteForceMatchingwithSIFTDescriptorsandRatioTest(template, image)
+            cv2.imshow('Slave Camera', _img)
+        return centerPoint
     def trackObject(self):
         rate = rospy.Rate(60) # 10hz
         cv2.setMouseCallback('Slave Camera', self.my_mouse_callback)
         while not rospy.is_shutdown():
             rate.sleep()
             if self.left_image is not None and self.right_image is not None:
-                self.fastMatchingPyramid.createTemplate(self.left_image, self.imageSize/2)
-                # cv2.imshow("template image", self.fastMatchingPyramid.getTemplate())
-                centerPoint = self.fastMatchingPyramid.trackObject(self.right_image)
+                centerPoint = self.computeTheCenterUsingDifferentAlgorithm(self.left_image,self.right_image )
+                print (centerPoint)
                 differences = self.calculateDifferences(centerPoint)
                 self.moveMotor(differences[0])
                 if self.activeTilitController:
@@ -199,9 +223,13 @@ class SlaveCameraController:
                     self.moveToZero()
                     exit()
                 elif ikey == ord('s'):
-                    self.saveImage(self.fastMatchingPyramid.getTemplate())
-                if self.terminateButton == 2 or self.fastMatchingPyramid.getTerminatedState():
+                    if self.algorithmToUse == 'PNCC':
+                        self.saveImage(self.fastMatchingPyramid.getTemplate())
+                if self.terminateButton == 2 :
                     break
+                # if self.algorithmToUse == 'PNCC':
+                #     if self.fastMatchingPyramid.getTerminatedState():
+                #         break
 
     def calculateDifferences(self, centerPoint):
         if centerPoint is not None:
@@ -225,13 +253,15 @@ class SlaveCameraController:
 
 ap = argparse.ArgumentParser(description='argument to control the slave controller!!')
 ap.add_argument('-s', '--scale',type=int, default=0, help='This use to control the size of the image process')
+ap.add_argument('-a', '--algorithm', default= 'PNCC', help='Chosse the algorithm to use PNCC or feature')
 
 args=vars(ap.parse_args())
 
 ScaleDown = args['scale']
+algorithm = args['algorithm']
 def main(scale):
-    rospy.init_node('FastMatchingPyramid', anonymous = True)
-    slaveController = SlaveCameraController(activeTilitController=True, scaleDown=ScaleDown)
+    rospy.init_node('SlaveMotorController', anonymous = True)
+    slaveController = SlaveCameraController(activeTilitController=True, algorithmToUse = algorithm, scaleDown=ScaleDown)
     try:
         slaveController.trackObject()
         # rospy.spin()
