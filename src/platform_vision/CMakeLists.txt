@@ -276,3 +276,6 @@ target_link_libraries(save_pointCloud ${OpenCV_LIBS} ${catkin_LIBRARIES})
 
 add_executable(structureFromMotion src/structureFromMotion.cpp)
 target_link_libraries(structureFromMotion ${OpenCV_LIBS} ${catkin_LIBRARIES})
+
+add_executable(featureBasedMatchingCuda src/featureBasedMatchingCuda.cpp)
+target_link_libraries(featureBasedMatchingCuda ${OpenCV_LIBS} ${catkin_LIBRARIES})

@@ -28,6 +28,15 @@ using namespace std;
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
 
+static void show_usage(std::string name)
+{
+    std::cerr << "Usage: " << name << " <option(s)> SOURCES"
+              << "Options:\n"
+              << "\t-h,--help\t\tShow this help message\n"
+              << "\t-d,--destination DESTINATION\tSpecify the destination path"
+              << std::endl;
+}
+
 vector <Point2f> detect_points_on_test_object(Mat img, Size boardSize){
   // Initialize the points storage and find the corners
   vector<cv::Point2f> detected_corner;
@@ -268,7 +277,7 @@ void odd_number_callback(int value, void*)
 }
 
 
-Mat Disparity(Mat left, Mat right, char mode = '2');
+Mat ComputerDisparity(Mat left, Mat right, char mode = '2');
 double calculate_projection_error(cv::Mat left, cv::Mat right, cv::Size boardSize, bool showimg);
 void findCorners(Mat imgLeft, Mat imgRight);
 Mat FilterDisp(Mat left, Mat right, Rect roi1,Rect roi2);
@@ -406,7 +415,15 @@ void drawBourderAroundObject(Mat color_img, Mat *output_image){
 
 int main(int argc,char** argv)
 {
-
+  bool resize_image_for_disparity = true;
+  // std::cout << argv[1] << std::endl;
+  bool my_bool = argv[1];
+  if (my_bool != false){
+    resize_image_for_disparity = false;
+    std::cout << "Full Size Image Processing !!!" << std::endl;
+  }else{
+    std::cout << "Small Size Image Processing !!!" << std::endl;
+  }
   //////////////////////////////////////
   ros::init(argc,argv,"RectifyImages");
   ros::NodeHandle nh;
@@ -652,7 +669,7 @@ int main(int argc,char** argv)
             // vector <Point2f> right_corners = detect_points_on_test_object(undisFrame2_gray, patten_size);
             // calculate_position_of_given_point(left_corners[1], right_corners[1], P1, P2);
 
-            bool resize_image_for_disparity = true;
+
             if(resize_image_for_disparity){
               cv::Size disparity_image = Size(640,420); // Size(1344,376); //Size(640,420); // Size(320,240);
               cv::resize(undisFrame1_gray, undisFrame1_gray, disparity_image);
@@ -663,7 +680,7 @@ int main(int argc,char** argv)
             // equalizeHist(undisFrame1_gray, undisFrame1_gray);
             // equalizeHist(undisFrame2_gray, undisFrame2_gray);
             update_trackbar_reading_and_odds_numbers();
-            Mat disp = Disparity(undisFrame1_gray,undisFrame2_gray, mode);
+            Mat disp = ComputerDisparity(undisFrame1_gray,undisFrame2_gray, mode);
             if(resize_image_for_disparity){
               resize(disp, disp,sizee);
               GaussianBlur( disp, disp, Size( 3, 3 ), 0, 0 );
@@ -832,6 +849,15 @@ int main(int argc,char** argv)
             }else if (ikey == '4'){
                 mode = '4';
                 cout<< "Mode: " << mode<< "  SGBM_filter" << endl;
+            }else if (ikey == '5'){
+                mode = '5';
+                cout<< "Mode: " << mode<< "   Stereo Belief Propagation" << endl;
+            }else if (ikey == '6'){
+                mode = '6';
+                cout<< "Mode: " << mode<< "   Stereo Constant Space BP" << endl;
+            }else if (ikey == '7'){
+                mode = '7';
+                cout<< "Mode: " << mode<< "   Cuda SGBM" << endl;
             }
         }// end of the if statment of the images
     }
@@ -843,7 +869,7 @@ return 1;
 }
 
 //this function use to calculate the diaprity
-Mat Disparity(Mat left, Mat right,char mode){
+Mat ComputerDisparity(Mat left, Mat right,char mode){
     int Disparity_formate = CV_8U; //CV_32F; //CV_8U
     Mat g1, g2;
     Mat disp, disp8, filtered_disp;
@@ -946,6 +972,44 @@ Mat Disparity(Mat left, Mat right,char mode){
 //           getDisparityVis(filtered_disp,filtered_disp_vis,vis_mult);
 //           disp8 = filtered_disp_vis;
             normalize(filtered_disp, disp8, 0, 256, CV_MINMAX, Disparity_formate);
+    }else if(mode == '5'){
+
+        cuda::GpuMat d_left, d_right, d_disp;
+        d_left.upload(g1);
+        d_right.upload(g2);
+
+        Ptr<cuda::StereoBeliefPropagation> bp;
+        bp = cuda::createStereoBeliefPropagation(NoDisparity,5,5,5);
+        bp->compute(d_left, d_right, d_disp);
+
+        d_disp.download(disp);
+        normalize(disp, disp8, 0, 255, CV_MINMAX, CV_8U);
+
+    }else if(mode == '6'){
+        cuda::GpuMat d_left, d_right, d_disp;
+        d_left.upload(g1);
+        d_right.upload(g2);
+        Ptr<cuda::StereoConstantSpaceBP> csbp;
+        csbp = cv::cuda::createStereoConstantSpaceBP(NoDisparity,8,4,4,5);
+        csbp->compute(d_left, d_right, d_disp);
+        d_disp.download(disp);
+        normalize(disp, disp8, 0, 255, CV_MINMAX, CV_8U);
+    }else if(mode == '7'){
+        cuda::GpuMat d_left, d_right, d_disp;
+        d_left.upload(g1);
+        d_right.upload(g2);
+        Ptr<cuda::StereoBM> bm;
+        bm = cuda::createStereoBM(NoDisparity,BloackSize);
+        bm->setSpeckleWindowSize(SpeckleWindowSize);
+        bm->setUniquenessRatio(UniquenessRatio);
+        bm->setTextureThreshold(setTextureThreshold);
+        bm->setMinDisparity(-setMinDisparity);
+        bm->setPreFilterType(prefilterType);
+        bm->setPreFilterSize(setPreFilterSize);
+        bm->setPreFilterCap(setPreFilterCap);
+        bm->compute(d_left, d_right, d_disp);
+        d_disp.download(disp);
+        normalize(disp, disp8, 0, 255, CV_MINMAX, CV_8U);
     }else{
         mode = '1';
     }
