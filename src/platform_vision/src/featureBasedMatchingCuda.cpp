@@ -1,10 +1,11 @@
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
+#include <std_msgs/Float64.h>
 #include <cv_bridge/cv_bridge.h>
 #include <string>
 #include <sstream>
-
+#include <math.h>       /* exp */
 
 #include "opencv2/core.hpp"
 #include "opencv2/features2d.hpp"
@@ -13,7 +14,12 @@
 #include "opencv2/xfeatures2d/cuda.hpp"
 #include "opencv2/xfeatures2d.hpp"
 #include "opencv2/calib3d.hpp"
+
+// Local headers
 #include "include/featurematchingbasedcuda.h"
+#include "include/motorController.h"
+#include "include/helpFunctions.h"
+
 
 using namespace std;
 using namespace cv;
@@ -21,7 +27,7 @@ using namespace cv::cuda;
 using namespace cv::xfeatures2d;
 
 
-Size imageSize = Size(2048 , 1080);
+Size imageSize = Size(2048 , 1080);//Size(4096,2160);
 static void help()
 {
     cout << "\nThis program demonstrates using SURF_CUDA features detector, descriptor extractor and BruteForceMatcher_CUDA" << endl;
@@ -33,53 +39,24 @@ static void help()
 
 // global virable
 Mat left_img, right_img;
-//Size sizee = Size(4096,2160);
-Size sizee = Size(2048 , 1080);
-//Size sizee = Size(1200,900);
-// the blow functions are the function use to get the values
-void left_img_callback(const sensor_msgs::ImageConstPtr& img_msg){
+Size sizee = Size(4096,2160);
+// Size sizee = Size(2048 , 1080);
 
-    // create storage for the comming image in cv format
-    cv_bridge::CvImagePtr cv_img_msg;
+// void left_img_callback(const sensor_msgs::ImageConstPtr& img_msg){
+//     left_img =  convertROSMat2OpencvMat(img_msg);
+// }
 
-    //copy the image and save it in opencv formate
-    try{
-    cv_img_msg = cv_bridge::toCvCopy(img_msg,sensor_msgs::image_encodings::BGR8);
-    }
-    catch(cv_bridge::Exception e)
-    {
-        ROS_ERROR("cv_bridge expection: %s", e.what());
-        return;
-    }
-
-    // left_img =  equalize_image_using_histograme(cv_img_msg->image);
-    left_img =  cv_img_msg->image;
-}
-
-void right_img_callback(const sensor_msgs::ImageConstPtr& img_msg){
-
-    // create storage for the comming image in cv format
-    cv_bridge::CvImagePtr cv_img_msg;
-
-    //copy the image and save it in opencv formate
-    try{
-    cv_img_msg = cv_bridge::toCvCopy(img_msg,sensor_msgs::image_encodings::BGR8);
-    }
-    catch(cv_bridge::Exception e)
-    {
-        ROS_ERROR("cv_bridge expection: %s", e.what());
-        return;
-    }
-
-    // right_img =  equalize_image_using_histograme(cv_img_msg->image);
-    right_img =  cv_img_msg->image;
-}
-
+// void right_img_callback(const sensor_msgs::ImageConstPtr& img_msg){
+//     right_img =  convertROSMat2OpencvMat(img_msg);
+// }
 
 
 int main(int argc,char** argv)
 {
 
+  cv::namedWindow("slave image", cv::WINDOW_NORMAL);
+  cv::resizeWindow("slave image", 900, 600);
+  
   int windowSize = 250;
   int algorithm = 1;
   if (argc > 1){
@@ -100,54 +77,52 @@ int main(int argc,char** argv)
   std::cout << "No Argument "<< '\n';
 }
 
-
-  // cv::Point2f point1 = cv::Point2f((imageSize.height/2 - windowSize), (imageSize.width/2 - windowSize));
-  // cv::Point2f point2 = cv::Point2f((imageSize.height/2 + windowSize), (imageSize.width/2 + windowSize));
-  cv::Rect windowSizeRectangule;
-  windowSizeRectangule.y = imageSize.height/2 - windowSize/2;
-  windowSizeRectangule.x = imageSize.width/2 - windowSize/2;
-  windowSizeRectangule.height = windowSize;
-  windowSizeRectangule.width = windowSize;
   //////////////////////////////////////
   ros::init(argc,argv,"FeatureTrackingCuda");
   ros::NodeHandle nh;
 
   //define the subscriber and publisher
-  ros::Subscriber left_img_sub = nh.subscribe("/stereo/left/image_raw",10,left_img_callback);
-  ros::Subscriber right_img_sub = nh.subscribe("/stereo/right/image_raw",10,right_img_callback);
-
-  while(1){
+  // ros::Subscriber left_img_sub = nh.subscribe("/stereo/left/image_raw",10,left_img_callback);
+  // ros::Subscriber right_img_sub = nh.subscribe("/stereo/right/image_raw",10,right_img_callback);
+  GetImageClass rightImageSubClass(nh, "right");
+  GetImageClass leftImageSubClass(nh, "left");
+  cv::Rect windowSizeRectangule = returnRectanguleSizeOfCenterImage(imageSize,windowSize);
+  MotorController motorController(nh, "right");
+  motorController.moveToZero();
+  ros::Rate r(20); // 10 hz
+  while(nh.ok()){
     ros::spinOnce();
     char ikey;
     ikey = cv::waitKey('q');
+    right_img = rightImageSubClass.getImage();
+    left_img = leftImageSubClass.getImage();
+
     if(!left_img.empty() && !right_img.empty()){
       // imshow("master Image", right_img);
-      cv::waitKey(3);
+      // cv::waitKey(3);
       Mat MasterImage = left_img(windowSizeRectangule);
       bool state;
-      switch (algorithm) {
-        case 0:
-          state = processWithGpu(right_img, MasterImage, 100);
-          break;
-        case 1:
-          state = ORBFullGpu(right_img, MasterImage);
-          break;
-        case 2:
-          state = ORBGpuMatching(right_img, MasterImage);
-          break;
-        default:
-          std::cout << "d";
-          break;
-      }
+      cv::Point2f targetPosition;
 
+      tie (state, targetPosition) = whichAlgorithm(right_img, MasterImage,algorithm);
+      // Computet the differences for the image size  and move the motors
+      cv::Point2f difference = motorController.converteToImageCoordinate(imageSize, targetPosition);
+      // cout << difference <<endl;
+      motorController.movePanMotor(difference.x); // 0 to move the pan motor
+      motorController.moveTiltMotor(difference.y); // 1 to move the tilt motor
+      int lineSize = 30;
+      line(right_img, cv::Point((right_img.cols/2)-lineSize, right_img.rows/2), cv::Point((right_img.cols/2)+lineSize, right_img.rows/2), cv::Scalar(0,0,255), 2);  //crosshair horizontal
+      line(right_img, cv::Point(right_img.cols/2, (right_img.rows/2)-lineSize), cv::Point(right_img.cols/2, (right_img.rows/2)+lineSize), cv::Scalar(0,0,255), 2);  //crosshair vertical
+      cv::imshow("slave image", right_img);
+      cv::waitKey(10);
       if (!state){
         break;
       }
-      MasterImage.release();
+      // MasterImage.release();
+    }
+    r.sleep();
   }
-}
-
-return 1;
-
-
+  std::cout<< "Return To Zero Position !!" << std::endl;
+  motorController.moveToZero();
+  return 1;
 }

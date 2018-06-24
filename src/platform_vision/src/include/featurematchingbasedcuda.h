@@ -1,4 +1,5 @@
 #include <iostream>
+#include <tuple>
 
 #include "opencv2/opencv_modules.hpp"
 
@@ -20,12 +21,13 @@ using namespace cv::cuda;
 using namespace cv::xfeatures2d;
 
 // It searches for the right position, orientation and scale of the object in the scene based on the good_matches.
-void localizeInImage(const std::vector<DMatch>& good_matches,
+cv::Point2f localizeInImage(const std::vector<DMatch>& good_matches,
         const std::vector<KeyPoint>& keypoints_object,
         const std::vector<KeyPoint>& keypoints_scene, const Mat& img_object,
-        const Mat& img_matches)
+        const Mat& img_matches, bool showImage = true)
 {
     //-- Localize the object
+    cv::Point2f targetPosition = cv::Point2f(0.0,0.0);
     std::vector<Point2f> obj;
     std::vector<Point2f> scene;
     for (int i = 0; i < good_matches.size(); i++) {
@@ -45,9 +47,9 @@ void localizeInImage(const std::vector<DMatch>& good_matches,
         std::vector<Point2f> scene_corners(4);
 
         perspectiveTransform(obj_corners, scene_corners, H);
-        Point2f center = (scene_corners[0]+scene_corners[1]+scene_corners[2]+scene_corners[3])/4;
+        targetPosition = (scene_corners[0]+scene_corners[1]+scene_corners[2]+scene_corners[3])/4;
 //        cout << center <<endl;
-
+        if (showImage){
         // Draw lines between the corners (the mapped object in the scene - image_2 )
         line(img_matches, scene_corners[0] + Point2f(img_object.cols, 0),
                 scene_corners[1] + Point2f(img_object.cols, 0),
@@ -61,21 +63,34 @@ void localizeInImage(const std::vector<DMatch>& good_matches,
         line(img_matches, scene_corners[3] + Point2f(img_object.cols, 0),
                 scene_corners[0] + Point2f(img_object.cols, 0),
                 Scalar(255, 0, 0), 4);
-    } catch (Exception& e) {}
+              }
+        return targetPosition;
+    } catch (Exception& e) {
+        return targetPosition;
+    }
 }
 
 //void processWithGpu(string objectInputFile, string sceneInputFile, string outputFile, int minHessian = 100)
-bool processWithGpu(Mat img, Mat obj, int minHessian = 100)
+std::tuple<bool, cv::Point2f> processWithGpu(Mat img, Mat obj, int minHessian = 100, bool showImage = true)
 {
-//    printf("GPU::Processing object: %s and scene: %s ...\n", objectInputFile.c_str(), sceneInputFile.c_str());
-
+    cv::Point2f targetPosition = cv::Point(0.0,0.0);
     // Load the image from the disk
     Mat img_object, img_scene ;
-    cv::cvtColor(obj,img_object,cv::COLOR_BGR2GRAY);
-    cv::cvtColor(img,img_scene,cv::COLOR_BGR2GRAY);
+    if(img.channels() == 3){
+      cv::cvtColor(img,img_scene,cv::COLOR_BGR2GRAY);
+    }else{
+      img.copyTo(img_object);
+    }
+    if(obj.channels() == 3){
+      cv::cvtColor(obj,img_object,cv::COLOR_BGR2GRAY);
+    }else{
+      obj.copyTo(img_scene);
+    }
+
+
     if( !img_object.data || !img_scene.data ) {
         std::cout<< "Error reading images." << std::endl;
-        return false;
+        return std::make_tuple(false,targetPosition) ;
     }
 
     // Copy the image into GPU memory
@@ -103,8 +118,6 @@ bool processWithGpu(Mat img, Mat obj, int minHessian = 100)
     surf.downloadKeypoints(keypoints_scene_Gpu, keypoints_scene);
     surf.downloadKeypoints(keypoints_object_Gpu, keypoints_object);
 
-
-
     //-- Step 4: Select only goot matches
     //vector<Point2f> obj, scene;
     std::vector< DMatch > good_matches;
@@ -121,17 +134,23 @@ bool processWithGpu(Mat img, Mat obj, int minHessian = 100)
 
     //-- Step 5: Draw lines between the good matching points
     Mat img_matches;
-    drawMatches( img_object, keypoints_object, img_scene, keypoints_scene,
-            good_matches, img_matches, Scalar::all(-1), Scalar::all(-1),
-            vector<char>(), DrawMatchesFlags::DEFAULT );
+    if(showImage){
+      drawMatches( img_object, keypoints_object, img, keypoints_scene,
+              good_matches, img_matches, Scalar::all(-1), Scalar::all(-1),
+              vector<char>(), DrawMatchesFlags::DEFAULT );
+    }
+
 
     //-- Step 6: Localize the object inside the scene image with a square
-    localizeInImage( good_matches, keypoints_object, keypoints_scene, img_object, img_matches );
+    targetPosition = localizeInImage( good_matches, keypoints_object, keypoints_scene, img_object, img_matches, showImage );
 
     //-- Step 7: Show/save matches
-    cv::namedWindow("Good Matches & Object detection",cv::WINDOW_NORMAL);
-    cv::resizeWindow("Good Matches & Object detection", 900,600);
-    imshow("Good Matches & Object detection", img_matches);
+    if(showImage){
+      cv::namedWindow("Good Matches & Object detection",cv::WINDOW_NORMAL);
+      cv::resizeWindow("Good Matches & Object detection", 900,600);
+      imshow("Good Matches & Object detection", img_matches);
+    }
+
     char ikey = waitKey('0');
 //    imwrite(outputFile, img_matches);
     if (ikey == 'q'){
@@ -141,14 +160,16 @@ bool processWithGpu(Mat img, Mat obj, int minHessian = 100)
     img_object_Gpu.release();
     img_scene_Gpu.release();
     cout<<"Close GPU tracking"<<endl;
-    return false;
+    return std::make_tuple(false, targetPosition);
     }
-    return true;
+    return std::make_tuple(true, targetPosition);
 }
 
 
 
-bool ORBFullGpu(const cv::Mat &scene_image, const cv::Mat object_image) {
+std::tuple<bool, cv::Point2f> ORBFullGpu(const cv::Mat &scene_image, const cv::Mat object_image) {
+
+    cv::Point2f targetPosition = cv::Point(0.0,0.0);
     //Upload from host memory to gpu device memeory
     cv::cuda::GpuMat scene_image_gpu(scene_image), object_image_gpu(object_image);
     cv::cuda::GpuMat scene_image_gray_gpu, object_image_gray_gpu;
@@ -214,12 +235,13 @@ bool ORBFullGpu(const cv::Mat &scene_image, const cv::Mat object_image) {
     object_image_gpu.release();
     object_image_gray_gpu.release();
     cout<<"Close GPU tracking"<<endl;
-    return false;
+    return std::make_tuple(false, targetPosition);
     }
-    return true;
+    return std::make_tuple(true, targetPosition);
 }
 
-bool ORBGpuMatching(const cv::Mat &scene_image, const cv::Mat object_image) {
+std::tuple<bool, cv::Point2f> ORBGpuMatching(const cv::Mat &scene_image, const cv::Mat object_image) {
+    cv::Point2f targetPosition = cv::Point(0.0,0.0);
     //Create a CPU ORB feature object
     cv::Ptr<cv::Feature2D> orb = cv::ORB::create(500, 1.2f, 8, 31, 0, 2, 0, 31, 20);
 
@@ -272,7 +294,29 @@ bool ORBGpuMatching(const cv::Mat &scene_image, const cv::Mat object_image) {
     //-- Step 8: Release objects from the GPU memory
     matcher.release();
     cout<<"Close GPU tracking"<<endl;
-    return false;
+    return std::make_tuple(false, targetPosition);
     }
-    return true;
+    return std::make_tuple(true, targetPosition);
+}
+
+std::tuple<bool, cv::Point2f> whichAlgorithm (cv::Mat right_img, cv::Mat MasterImage,int algorithm){
+  bool state;
+  cv::Point2f targetPosition;
+
+  switch (algorithm) {
+    case 0:
+      tie(state, targetPosition) = processWithGpu(right_img, MasterImage, 100);
+      break;
+    case 1:
+      tie(state, targetPosition) = ORBFullGpu(right_img, MasterImage);
+      break;
+    case 2:
+      tie(state, targetPosition) = ORBGpuMatching(right_img, MasterImage);
+      break;
+    default:
+      std::cout << "d";
+      break;
+  }
+
+  return std::make_tuple(state, targetPosition);
 }
