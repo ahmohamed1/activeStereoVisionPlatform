@@ -5,7 +5,7 @@ import cv2
 import sys
 import numpy as np
 import math
-from skimage.measure import structural_similarity as compare_ssim
+from skimage.measure import compare_ssim
 
 VERBOSE = True
 DEBUG = True

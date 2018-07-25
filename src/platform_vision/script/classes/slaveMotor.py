@@ -19,13 +19,17 @@ from std_msgs.msg import Float64
 import os.path
 import PNCC
 import BaseFeatureMatching
-
+import vergincyDepthClass
 
 VERBOSE = True
 DEBUG = True
 
 class SlaveCameraController:
     def __init__(self, activeTilitController=False,algorithmToUse= 'PNCC', scaleDown = 0):
+
+        self.drawTrackingSystem = vergincyDepthClass.DrawTrackingSystem()
+
+
         cv2.namedWindow('Slave Camera', cv2.WINDOW_NORMAL)
         cv2.resizeWindow('Slave Camera', (900,600))
         self.leftMotorPub = rospy.Publisher('/right/pan/move', Float64, queue_size=2)
@@ -215,6 +219,8 @@ class SlaveCameraController:
         cv2.setMouseCallback('Slave Camera', self.my_mouse_callback)
         while not rospy.is_shutdown():
             rate.sleep()
+            # Publish the coordinate
+            self.drawTrackingSystem.calculateThePosition()
             if self.left_image is not None and self.right_image is not None:
                 centerPoint = self.computeTheCenterUsingDifferentAlgorithm(self.left_image,self.right_image )
                 differences = self.calculateDifferences(centerPoint)
