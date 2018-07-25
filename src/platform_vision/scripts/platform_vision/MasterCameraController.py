@@ -18,7 +18,7 @@ from std_msgs.msg import UInt16 , Int64
 import trackByAruco
 import trackByColor
 import PNCC
-import pySaliencyMap
+from saliency_map.SaliencyMap import pySaliencyMap
 VERBOSE = True
 DEBUG = True
 

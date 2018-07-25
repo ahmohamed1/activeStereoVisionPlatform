@@ -15,7 +15,7 @@ import tf2_ros
 import geometry_msgs.msg
 
 class DrawTrackingSystem:
-    def __init__(self):
+    def __init__(self, graphOutput = False):
 
         self.baselineSubscriber = rospy.Subscriber("/baseline/position", Float64, self.baselineCallback)
         self.leftCameraAngle = rospy.Subscriber("/left/pan/angle", Float64, self.leftAngleCallback)
@@ -31,10 +31,11 @@ class DrawTrackingSystem:
         self.baseline = 0.0
         self.leftLine = 0.0
         self.rightLine = 0.0
-        self.txt = 0.0
-        self.win = graphics.GraphWin(width=500, height=500)
-        self.win.setCoords(-250, -250, 250, 250)
-        self.win.setBackground("yellow")
+        if graphOutput:
+            self.txt = 0.0
+            self.win = graphics.GraphWin(width=500, height=500)
+            self.win.setCoords(-250, -250, 250, 250)
+            self.win.setBackground("yellow")
         self.targetX = 0
         self.targetY = 0
         self.actualBaseline = 50
@@ -73,7 +74,8 @@ class DrawTrackingSystem:
         self.targetPositionPub.publish(pose)
 
     def __del__(self):
-        self.win.close
+        if graphOutput:
+            self.win.close
 
     def baselineCallback(self, msg):
         self.actualBaseline = (msg.data / 10) + 0.4
@@ -132,7 +134,7 @@ class DrawTrackingSystem:
             x ,y, z = self.transformCoordinate(self.targetY, self.targetX, 0.0, -self.tiltingAngle)
 
             # depthTan = B / (math.tan(self.deg2rad(AR)) + math.tan(self.deg2rad(AL)))
-            print "X:", round(x,2) , " Y:", round(y,2) , " Z:", round(z,2)# , " DR: ", round(DR,1), " DL: ", round(DL,1)#, "Depth Based Tan: ", depthTan
+            # print "X:", round(x,2) , " Y:", round(y,2) , " Z:", round(z,2)# , " DR: ", round(DR,1), " DL: ", round(DL,1)#, "Depth Based Tan: ", depthTan
             # print "XR:", round(XposR,2) , " YR:", round(DR,2), " XL:", round(XposL,2) , " YL:", round(DL,2)
             self.publishPose(x,y,z)
             self.dynamicTFBroadcaster(x, y, z)
@@ -194,7 +196,7 @@ class DrawTrackingSystem:
         # print "/////////////////////////////////////////////////////////////"
         while not rospy.is_shutdown():
             self.calculateThePosition()
-            self.drawSystem()
+            # self.drawSystem()
             rate.sleep()
 
         # self.saveDateAfterFinish()

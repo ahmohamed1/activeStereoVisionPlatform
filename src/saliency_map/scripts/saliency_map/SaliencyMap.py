@@ -13,6 +13,9 @@ import cv2
 import numpy as np
 import pySaliencyMapDefs
 
+Debug = False
+Save = False
+
 class pySaliencyMap:
     # initialization
     def __init__(self, width, height):
@@ -33,6 +36,9 @@ class pySaliencyMap:
         (B, G, R) = cv2.split(src)
         # extract an intensity image
         I = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
+        if Save:
+            # corrected_image = cv2.convertScaleAbs(I*255)
+            cv2.imwrite('output/intensity.jpg', I)
         # return
         return R, G, B, I
 
@@ -46,28 +52,44 @@ class pySaliencyMap:
             dst.append(nowdst)
         return dst
     ## taking center-surround differences
-    def FMCenterSurroundDiff(self, GaussianMaps):
+    # def FeatureMapCenterSurroundDiffirences(self, GaussianMaps):
+    #     dst = list()
+    #     for s in range(2,5):
+    #         now_size = GaussianMaps[s].shape
+    #         now_size = (now_size[1], now_size[0])  ## (width, height)
+    #         tmp = cv2.resize(GaussianMaps[s+3], now_size, interpolation=cv2.INTER_LINEAR)
+    #         nowdst = cv2.absdiff(GaussianMaps[s], tmp)
+    #         dst.append(nowdst)
+    #         tmp = cv2.resize(GaussianMaps[s+4], now_size, interpolation=cv2.INTER_LINEAR)
+    #         nowdst = cv2.absdiff(GaussianMaps[s], tmp)
+    #         dst.append(nowdst)
+    #     return dst
+    ######################################################################################
+    def FeatureMapCenterSurroundDiffirences(self, GaussianMaps):
         dst = list()
         for s in range(2,5):
             now_size = GaussianMaps[s].shape
             now_size = (now_size[1], now_size[0])  ## (width, height)
-            tmp = cv2.resize(GaussianMaps[s+3], now_size, interpolation=cv2.INTER_LINEAR)
-            nowdst = cv2.absdiff(GaussianMaps[s], tmp)
-            dst.append(nowdst)
-            tmp = cv2.resize(GaussianMaps[s+4], now_size, interpolation=cv2.INTER_LINEAR)
-            nowdst = cv2.absdiff(GaussianMaps[s], tmp)
-            dst.append(nowdst)
+            for c in range(3,5):
+                # print (c)
+                tmp = cv2.resize(GaussianMaps[s+c], now_size, interpolation=cv2.INTER_LINEAR)
+                nowdst = cv2.absdiff(GaussianMaps[s], tmp)
+                dst.append(nowdst)
+                # cv2.imshow('center-surround ' + str(s+c),nowdst)
+            # print ('////////////////////')
         return dst
+    ######################################################################################
+
     ## constructing a Gaussian pyramid + taking center-surround differences
-    def FMGaussianPyrCSD(self, src):
+    def FMGaussianPyramidCenterSurroundDifferences(self, src):
         GaussianMaps = self.FMCreateGaussianPyr(src)
-        dst = self.FMCenterSurroundDiff(GaussianMaps)
+        dst = self.FeatureMapCenterSurroundDiffirences(GaussianMaps)
         return dst
     ## intensity feature maps
-    def IFMGetFM(self, I):
-        return self.FMGaussianPyrCSD(I)
+    def IntensityFeatureMap(self, I):
+        return self.FMGaussianPyramidCenterSurroundDifferences(I)
     ## color feature maps
-    def CFMGetFM(self, R, G, B):
+    def ColourFeatureMap(self, R, G, B):
         # max(R,G,B)
         tmp1 = cv2.max(R, G)
         RGBMax = cv2.max(B, tmp1)
@@ -79,15 +101,74 @@ class pySaliencyMap:
         # BY = (B-min(R,G)/max(R,G,B)
         BY = (B - RGMin) / RGBMax
         # clamp nagative values to 0
-        RG[RG < 0] = 0
-        BY[BY < 0] = 0
+        limitedRG = 0.2
+        # RG[RG < limitedRG] = 0 # Threshold thevalue if below 0.5 make it zero
+        # RG[RG > limitedRG] = 1
+        # BY[BY < 0] = 0
+        # BY[BY > 0.1] = 0# Threshold
+
+        if Debug:
+            # corrected_image = cv2.convertScaleAbs(RG*255)
+            # ret,thresh4 = cv2.threshold(corrected_image,180,255,cv2.THRESH_TOZERO)
+            cv2.imshow('red-green', RG)
+            cv2.imshow('blue-yellow', BY)
+        if Save:
+            corrected_image = cv2.convertScaleAbs(RG*255)
+            cv2.imwrite('output/red-green.jpg', corrected_image)
+            corrected_image = cv2.convertScaleAbs(BY*255)
+            cv2.imwrite('output/blue-yellow.jpg', corrected_image)
         # obtain feature maps in the same way as intensity
-        RGFM = self.FMGaussianPyrCSD(RG)
-        BYFM = self.FMGaussianPyrCSD(BY)
+        RGFM = self.FMGaussianPyramidCenterSurroundDifferences(RG)
+        BYFM = self.FMGaussianPyramidCenterSurroundDifferences(BY)
+
+        if Debug:
+            for i in range(len(RGFM)):
+                cv2.imshow('RGFM level ' + str(i), cv2.resize(RGFM[i],(640,420)))
+                cv2.imwrite('RGFM level ' + str(i)+ '.png', cv2.convertScaleAbs(cv2.resize(RGFM[i],(640,420))*255))
+            for i in range(len(BYFM)):
+                cv2.imshow('BYFM level ' + str(i), cv2.resize(BYFM[i],(640,420)))
+                cv2.imwrite('BYFM level ' + str(i)+ '.png', cv2.convertScaleAbs(cv2.resize(BYFM[i],(640,420))*255))
+            cv2.waitKey(0)
+
+
         # return
         return RGFM, BYFM
+
+    ## HSV feature map
+    def HSVFeatureMap(self, src):
+        hsv_image = cv2.cvtColor(src, cv2.COLOR_BGR2HSV)
+        (H, V, S) = cv2.split(hsv_image)
+        #Correct image
+        temp = cv2.max(V, S)
+        maxVS = cv2.max(H, temp)
+        maxVS[maxVS <= 0] = 0.0001
+        VS = (V - S) / maxVS
+
+        VS[VS < 0] = 0
+
+        minVS = cv2.min(V, S)
+        minVS[minVS <= 0] = 0.0001
+        Hmin = (H - minVS) / maxVS
+
+        diff = VS-Hmin
+        diff[diff < 0] = 0.0001
+        # diff[diff > 0.1] = 1
+        if Debug == True:
+            # diff = cv2.bitwise_not(diff)
+            cv2.imshow('HVS', diff)
+        if Save:
+            corrected_image = cv2.convertScaleAbs(diff*255)
+            cv2.imwrite('output/HVS.jpg', corrected_image)
+
+        HSVDiff = self.FMGaussianPyramidCenterSurroundDifferences(diff)
+        if Debug:
+            for i in range(len(HSVDiff)):
+                cv2.imshow('HSVDiff level ' + str(i), cv2.resize(HSVDiff[i],(640,420)))
+                cv2.imwrite('HSVDiff level ' + str(i)+ '.png', cv2.convertScaleAbs(cv2.resize(HSVDiff[i],(640,420))*255))
+
+        return HSVDiff
     ## orientation feature maps
-    def OFMGetFM(self, src):
+    def orientationFeatureMap(self, src):
         # creating a Gaussian pyramid
         GaussianI = self.FMCreateGaussianPyr(src)
         # convoluting a Gabor filter with an intensity image to extract oriemtation features
@@ -101,16 +182,33 @@ class pySaliencyMap:
             GaborOutput90.append(  cv2.filter2D(GaussianI[j], cv2.CV_32F, self.GaborKernel90) )
             GaborOutput135.append( cv2.filter2D(GaussianI[j], cv2.CV_32F, self.GaborKernel135) )
         # calculating center-surround differences for every oriantation
-        CSD0   = self.FMCenterSurroundDiff(GaborOutput0)
-        CSD45  = self.FMCenterSurroundDiff(GaborOutput45)
-        CSD90  = self.FMCenterSurroundDiff(GaborOutput90)
-        CSD135 = self.FMCenterSurroundDiff(GaborOutput135)
+        CSD0   = self.FeatureMapCenterSurroundDiffirences(GaborOutput0)
+        CSD45  = self.FeatureMapCenterSurroundDiffirences(GaborOutput45)
+        CSD90  = self.FeatureMapCenterSurroundDiffirences(GaborOutput90)
+        CSD135 = self.FeatureMapCenterSurroundDiffirences(GaborOutput135)
         # concatenate
         dst = list(CSD0)
         dst.extend(CSD45)
         dst.extend(CSD90)
         dst.extend(CSD135)
         # return
+        if Debug :
+            x = 6
+            cv2.imshow('GaborOutput0', cv2.resize(GaborOutput0[x], (640,420)))
+            cv2.imshow('GaborOutput45', cv2.resize(GaborOutput45[x], (640,420)))
+            cv2.imshow('GaborOutput90', cv2.resize(GaborOutput90[x], (640,420)))
+            cv2.imshow('GaborOutput135', cv2.resize(GaborOutput135[x], (640,420)))
+        if Save:
+            for x in range(9):
+                corrected_image = cv2.convertScaleAbs(cv2.resize(GaborOutput0[x], (640,420))*255)
+                cv2.imwrite('output/' + str(x) +'LevelGaborOutput0.jpg', corrected_image)
+                corrected_image = cv2.convertScaleAbs(cv2.resize(GaborOutput45[x], (640,420))*255)
+                cv2.imwrite('output/' + str(x) +'GaborOutput45.jpg', corrected_image)
+                corrected_image = cv2.convertScaleAbs(cv2.resize(GaborOutput90[x], (640,420))*255)
+                cv2.imwrite('output/' + str(x) +'GaborOutput90.jpg', corrected_image)
+                corrected_image = cv2.convertScaleAbs(cv2.resize(GaborOutput135[x], (640,420))*255)
+                cv2.imwrite('output/' + str(x) +'GaborOutput135.jpg', corrected_image)
+
         return dst
     ## motion feature maps
     def MFMGetFM(self, src):
@@ -144,8 +242,8 @@ class pySaliencyMap:
             flowx = np.zeros(I8U.shape)
             flowy = np.zeros(I8U.shape)
         # create Gaussian pyramids
-        dst_x = self.FMGaussianPyrCSD(flowx)
-        dst_y = self.FMGaussianPyrCSD(flowy)
+        dst_x = self.FMGaussianPyramidCenterSurroundDifferences(flowx)
+        dst_y = self.FMGaussianPyramidCenterSurroundDifferences(flowy)
         # update the current frame
         self.prev_frame = np.uint8(I8U)
         # return
@@ -169,6 +267,7 @@ class pySaliencyMap:
         # find local maxima
         numlocal = 0
         lmaxmean = 0
+        glovalMinimum, glovalMaximum, dummy1, dummy2 = cv2.minMaxLoc(src)
         for y in range(0, height-stepsize, stepsize):
             for x in range(0, width-stepsize, stepsize):
                 localimg = src[y:y+stepsize, x:x+stepsize]
@@ -176,19 +275,24 @@ class pySaliencyMap:
                 lmaxmean += lmax
                 numlocal += 1
         # averaging over all the local regions
-        return lmaxmean / numlocal
+        return lmaxmean / numlocal , glovalMaximum
     ## normalization specific for the saliency map model
     def SMNormalization(self, src):
         dst = self.SMRangeNormalize(src)
-        lmaxmean = self.SMAvgLocalMax(dst)
+        lmaxmean, glovalMaximum = self.SMAvgLocalMax(dst)
         normcoeff = (1-lmaxmean)*(1-lmaxmean)
         return dst * normcoeff
+        # threshold = 0.35
+        # if lmaxmean < glovalMaximum * threshold:
+        #     lmaxmean = glovalMaximum * threshold
+        # return dst / np.sqrt(lmaxmean)
     ## normalizing feature maps
     def normalizeFeatureMaps(self, FM):
         NFM = list()
         for i in range(0,6):
             normalizedImage = self.SMNormalization(FM[i])
             nownfm = cv2.resize(normalizedImage, (self.width, self.height), interpolation=cv2.INTER_LINEAR)
+            # cv2.imshow('normalizing feature maps_' + str(i),nownfm )
             NFM.append(nownfm)
         return NFM
     ## intensity conspicuity map
@@ -203,8 +307,15 @@ class pySaliencyMap:
         CCM_BY = self.ICMGetCM(CFM_BY)
         # merge
         CCM = CCM_RG + CCM_BY
+        # cv2.imshow('CCM',CCM )
         # return
         return CCM
+    ## HSV conspicuity map
+    def HSVMGetCM(self, CFM_RG):
+        # extracting a conspicuity map for every color opponent pair
+        CCM_RG = self.ICMGetCM(CFM_RG)
+        # return
+        return CCM_RG
     ## orientation conspicuity map
     def OCMGetCM(self, OFM):
         OCM = np.zeros((self.height, self.width))
@@ -234,21 +345,29 @@ class pySaliencyMap:
         # extracting individual color channels
         R, G, B, I = self.SMExtractRGBI(src)
         # extracting feature maps
-        IFM = self.IFMGetFM(I)
-        CFM_RG, CFM_BY = self.CFMGetFM(R, G, B)
-        OFM = self.OFMGetFM(I)
-        MFM_X, MFM_Y = self.MFMGetFM(I)
+        IFM = self.IntensityFeatureMap(I)
+        CFM_RG, CFM_BY = self.ColourFeatureMap(R, G, B)
+        OFM = self.orientationFeatureMap(I)
+
+        HSV_feature = self.HSVFeatureMap(src)
         # extracting conspicuity maps
         ICM = self.ICMGetCM(IFM)
         CCM = self.CCMGetCM(CFM_RG, CFM_BY)
+        HSVF = self.HSVMGetCM(HSV_feature)
         OCM = self.OCMGetCM(OFM)
-        MCM = self.MCMGetCM(MFM_X, MFM_Y)
+
         # adding all the conspicuity maps to form a saliency map
         wi = pySaliencyMapDefs.weight_intensity
         wc = pySaliencyMapDefs.weight_color
         wo = pySaliencyMapDefs.weight_orientation
         wm = pySaliencyMapDefs.weight_motion
-        SMMat = wi*ICM + wc*CCM + wo*OCM + wm*MCM
+
+        if wm > 0:
+            MFM_X, MFM_Y = self.MFMGetFM(I)
+            MCM = self.MCMGetCM(MFM_X, MFM_Y)
+            SMMat = wi*ICM + wc*CCM + wo*OCM + wm*MCM
+
+        SMMat = wi*ICM + wc*CCM + wo*OCM
         # normalize
         normalizedSM = self.SMRangeNormalize(SMMat)
         normalizedSM2 = normalizedSM.astype(np.float32)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy
-import vergincyDepthClass
+import platform_controller.vergincyDepthClass as vergincyDepthClass
 
 def main():
     rospy.init_node('DrawTrackingSystem', anonymous = True)

@@ -3,7 +3,7 @@
 import rospy
 import sys
 
-import MasterCameraController
+import platform_vision.MasterCameraController as MasterCameraController
 import argparse
 ap = argparse.ArgumentParser(description='argument to control the slave controller!!')
 ap.add_argument('-a', '--algorithm', default='aruco', help='Select which algorithm you want to use there are: aruco, PNCC, colorWithPNCC, saliency and color')

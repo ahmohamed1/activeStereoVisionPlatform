@@ -17,9 +17,9 @@ from std_msgs.msg import Int64
 from std_msgs.msg import Float64
 
 import os.path
-import PNCC
-import BaseFeatureMatching
-import vergincyDepthClass
+import platform_vision.PNCC as PNCC
+import platform_vision.BaseFeatureMatching as BaseFeatureMatching
+from platform_controller.vergincyDepthClass import DrawTrackingSystem
 
 VERBOSE = True
 DEBUG = True
@@ -27,7 +27,7 @@ DEBUG = True
 class SlaveCameraController:
     def __init__(self, activeTilitController=False,algorithmToUse= 'PNCC', scaleDown = 0):
 
-        self.drawTrackingSystem = vergincyDepthClass.DrawTrackingSystem()
+        self.drawTrackingSystem = DrawTrackingSystem()
 
 
         cv2.namedWindow('Slave Camera', cv2.WINDOW_NORMAL)
