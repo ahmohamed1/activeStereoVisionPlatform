@@ -27,6 +27,7 @@ class MasterCameraController:
     def __init__(self, algorithmForTracking, suspendMotor = True ,saveData=False, ScaleDown=False):
         cv2.namedWindow('Master Camera', cv2.WINDOW_NORMAL)
         self.ScaleDown = ScaleDown
+        self.templateSize = 0.5
         if self.ScaleDown:
             self.imageSize = np.array([ int(2048/2), int(1080/2)])
             self.thresholdMotorController = np.array([20,5])
@@ -68,7 +69,7 @@ class MasterCameraController:
             self.TemplateCenter = np.array([0,0])
             cv2.resizeWindow('Master Camera', (900,600))
 
-
+        self.motorCountForTerminate = 0
         self.saveDataAble = saveData
         if self.saveDataAble == True:
             self.saveData = SaveData()
@@ -124,10 +125,21 @@ class MasterCameraController:
     def my_mouse_callback(self, event,x,y,flags,param):
         if event==cv2.EVENT_LBUTTONDOWN:
             print x,y
-            self.TemplateCenter = np.array([x , y])
+            self.set_Template_Center(x,y)
 
         if event==cv2.EVENT_RBUTTONDOWN:
             self.terminateButton += 1
+
+    def set_Template_Center(self, x ,y):
+        self.TemplateCenter = np.array([x , y])
+        self.motorCountForTerminate = 0
+        print("Center of template was set correctelly")
+
+    def setTemplateSize(self, size):
+        if self.algorithmForTracking == 'PNCC':
+            self.PNCC.setTemplateSize()
+        else:
+            pass
 
     def ideaToTrackCallback(self,data):
         self.ideatToTrack = data.data
@@ -259,9 +271,12 @@ class MasterCameraController:
         return centerPoint
 
 
-    def trackObject(self):
+    def trackObject(self, visualAttention=False):
         rate = rospy.Rate(15) # 10hz
-        cv2.setMouseCallback('Master Camera', self.my_mouse_callback)
+        if visualAttention == False:
+            cv2.setMouseCallback('Master Camera', self.my_mouse_callback)
+        panMotorstate = None
+        tiltMotorState = None
         while not rospy.is_shutdown():
             rate.sleep()
             if self.image is not None:
@@ -270,9 +285,9 @@ class MasterCameraController:
                 print ("diff: i%", differences)
 
                 if self.suspendMotor:
-                    self.moveMotor(differences[0])
+                    panMotorstate = self.moveMotor(differences[0])
                     # self.moveMotorSpeed(differences[0])
-                    self.TiltMoveMotor(differences[1])
+                    tiltMotorState = self.TiltMoveMotor(differences[1])
                 ikey = cv2.waitKey(3)
                 # self.createWindows('image', self.image)
                 if self.terminateButton == 2 :
@@ -290,6 +305,13 @@ class MasterCameraController:
                 #     self.incremantel = 0
             else:
                 print("No Image To Process!!!")
+            if visualAttention == True:
+                if panMotorstate and tiltMotorState:
+                    self.motorCountForTerminate += 1
+
+                if self.motorCountForTerminate == 15:
+                    print('Target centered')
+                    break
 
     def createWindows(self, imageName, imageToShow, WindowSize = (640,320)):
         cv2.namedWindow(imageName, cv2.WINDOW_NORMAL)
@@ -304,6 +326,7 @@ class MasterCameraController:
             return np.array([0 , 0])
 
     def moveMotor(self,value):
+        state = False
         speed = 0
         speed = np.sign(-value) * math.exp(abs(value)*self.exponatialGain[0])*self.mapExponatialValue[0]
         if abs(value) > self.thresholdMotorController[0] :
@@ -319,10 +342,13 @@ class MasterCameraController:
             self.motorPublisher.publish(self.motorPos[0])
         else:
             print "Pan Center Position"
+            state = True
         # Save the speed
         if self.saveDataAble == True:
             self.saveData.storeData(speed, value)
             self.saveData.checkSpeedRepetedlly(value)
+
+        return state
 
     # def moveMotorSpeed(self, value):
     #     speed = 0
