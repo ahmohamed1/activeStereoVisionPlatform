@@ -11,6 +11,7 @@ from platform_vision.SlaveCameraController import SlaveCameraController
 from platform_vision.helpFunctions import GetImageClass
 from saliency_map.implementFOA import *
 
+from visual_attention_base.markerClass import markerClass
 
 class Visual_Attention:
 
@@ -30,15 +31,17 @@ class Visual_Attention:
 
         # Define the gaze controller for the master camera
         self.masterCameraController = MasterCameraController('PNCC', suspendMotor = True ,saveData=False, ScaleDown=True)
-        self.slaveController = SlaveCameraController(activeTilitController=True, algorithmToUse ='PNCC', scaleDown=True)
         # Define the vergency controller for slave camera
+        self.slaveController = SlaveCameraController(activeTilitController=True, algorithmToUse ='PNCC', scaleDown=True)
 
+        # Define the markerClass
+        self.createVisualizationMarker = markerClass.CreateVisualizationMarker()
 
     def action(self):
         while not rospy.is_shutdown():
             image = self.master_ImageCallBack.getImage()
             # Step 1: get the targets from the saliency
-            if len(self.ListOfTargets) < 1:
+            if len(self.ListOfTargets) == 0:
                 self.ListOfTargets = ComputeFOA(image)
             # Step 2: Gaze on the target with maximum probability2D
             # drop the target out and added to the visited target
@@ -47,11 +50,13 @@ class Visual_Attention:
             self.masterCameraController.setTemplateSize(targetToTrack[2])
             self.masterCameraController.trackObject(visualAttention = True)
             # Step 3: wait the topic from vergency controller to store the pose of the targets
-            slaveController.trackObject()
+            pose3D = slaveController.trackObject()
             # Step 4: Compute the disparity and process the point cloud measure the affordance of grasp
-
+            propability3D = 'pointCloud'
             # Setp 5: Update the MainMap with all data and publish the data
-
+            mainMap_tmp = [self.ListOfTargets[0], self.ListOfTargets[1], self.ListOfTargets[2], self.ListOfTargets[3],propability3D, pose3D]
+            self.mainMap.append(mainMap_tmp)
+            self.createVisualizationMarker.publishMarkerArray(self.mainMap)
 
 
 def main():
