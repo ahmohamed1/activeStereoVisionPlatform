@@ -11,7 +11,7 @@ from platform_vision.SlaveCameraController import SlaveCameraController
 from platform_vision.helpFunctions import GetImageClass
 from saliency_map.implementFOA import *
 
-from visual_attention_base.markerClass import markerClass
+from visual_attention_base.markerClass import CreateVisualizationMarker
 
 class Visual_Attention:
 
@@ -35,7 +35,7 @@ class Visual_Attention:
         self.slaveController = SlaveCameraController(activeTilitController=True, algorithmToUse ='PNCC', scaleDown=True)
 
         # Define the markerClass
-        self.createVisualizationMarker = markerClass.CreateVisualizationMarker()
+        self.createVisualizationMarker = CreateVisualizationMarker()
 
     def action(self):
         while not rospy.is_shutdown():

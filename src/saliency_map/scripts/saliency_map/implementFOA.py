@@ -78,11 +78,11 @@ def ComputeFOA(imageFullSize):
 	while(probability > minimumPropapility):
 		# probability, corrected_image, targetPose = trackingSaliency(img, corrected_image, listOfObjects,  minimumPropapility,model= trainedModel,  loopindex= index)
 		probability, corrected_image, targetPose, probabilitOfTomato = trackingSaliencyRegionBase(img, corrected_image, minimumPropapility,model= trainedModel,  loopindex= index)
-		index += 1
+		# index += 1
 		if targetPose != None:
 			# cropedRegionOfInterest(imageFullSize, targetPose, ratio_width, ratio_hieght, targetListInOneScene, extraRaduis =10)
 			cropedRegionOfInterest(temp_image, targetPose, 1, 1, targetListInOneScene, extraRaduis =10)
-            index += 1
+			index += 1
 		if checkProbability:
 			minimumPropapility = abs(probability - 0.3)
 			checkProbability = False
