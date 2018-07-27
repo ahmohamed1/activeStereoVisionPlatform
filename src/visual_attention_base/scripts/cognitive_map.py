@@ -40,19 +40,29 @@ class Visual_Attention:
     def action(self):
         while not rospy.is_shutdown():
             image = self.master_ImageCallBack.getImage()
+
             # Step 1: get the targets from the saliency
             if len(self.ListOfTargets) == 0:
                 self.ListOfTargets = ComputeFOA(image)
+
+
+
             # Step 2: Gaze on the target with maximum probability2D
             # drop the target out and added to the visited target
             targetToTrack = self.ListOfTargets.pop()                #[['idea', '2D propability', '2D size', '2D pose' ]]
             self.masterCameraController.set_Template_Center(targetToTrack[3])
             self.masterCameraController.setTemplateSize(targetToTrack[2])
             self.masterCameraController.trackObject(visualAttention = True)
+
+
             # Step 3: wait the topic from vergency controller to store the pose of the targets
             pose3D = slaveController.trackObject()
+
+
             # Step 4: Compute the disparity and process the point cloud measure the affordance of grasp
             propability3D = 'pointCloud'
+
+
             # Setp 5: Update the MainMap with all data and publish the data
             mainMap_tmp = [self.ListOfTargets[0], self.ListOfTargets[1], self.ListOfTargets[2], self.ListOfTargets[3],propability3D, pose3D]
             self.mainMap.append(mainMap_tmp)
