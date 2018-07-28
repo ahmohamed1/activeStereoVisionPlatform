@@ -22,6 +22,8 @@ class Visual_Attention:
 
         # Define the master camera image
         self.master_ImageCallBack = GetImageClass('right')
+        self.slave_ImageCallBack = GetImageClass('left')
+
 
         self.visualAttention_mode = 'fix position' # 'explore'
         # define the saliency map
