@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<interinsic1 type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    2524.259244299837 0.0 965.4905020503259
+    0.0 2514.587041803112 658.0212341916331
+    0.0 0.0 1.0</data></interinsic1>
+<interinsic2 type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    2507.616681897191 0.0 968.5050903124002
+    0.0 2502.8894242878614 688.271115493075
+    0.0 0.0 1.0</data></interinsic2>
+<distCoeffs1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    -0.06525225579112608 0.09011606213288473 -0.0015044730036777153 -0.002244089235859268 0.0</data></distCoeffs1>
+<distCoeffs2 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    -0.02514205095438759 -0.22086364339940187 -0.0018486859592217711 -0.005807797097844544 0.0</data></distCoeffs2>
+<R type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    0.999812597996683 -0.017117434624119368 -0.009042251877281332
+    0.017153976475718938 0.999844941313856 0.003979248693187222
+    0.008972735268226725 -0.00413361355000081 0.9999512004397143</data></R>
+<T type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    -0.1049641116744887 5.787077248525091e-05 -0.014953415994515797</data></T>
+<E type_id="opencv-matrix">
+  <rows>0</rows>
+  <cols>0</cols>
+  <dt>u</dt>
+  <data></data></E>
+<F type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    -8.4021244490091986e-10 2.2894407938303797e-07
+    -2.5310509077814283e-05 -1.3361971031035455e-07
+    2.4553708560841960e-08 2.2264894240654323e-02 8.9569936345243212e-05
+    -2.2056079221687362e-02 1.</data></F>
+<Error type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    4.0737237222718758e-01 2.7476028005241881e-01 3.7008162590954369e-01</data></Error>
+<actual_angle type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>f</dt>
+  <data>
+    0. 0. 0.</data></actual_angle>
+</opencv_storage>

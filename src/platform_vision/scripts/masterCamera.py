@@ -14,7 +14,7 @@ args=vars(ap.parse_args())
 
 def main(argument='aruco', suspendMotor= True, scaleDown=0):
     print(suspendMotor)
-    rospy.init_node('MotorController', anonymous = True)
+    rospy.init_node('Master_Motor_Controller', anonymous = False)
     motorController = MasterCameraController.MasterCameraController(argument, suspendMotor= suspendMotor, saveData=False, ScaleDown=scaleDown)
     try:
         motorController.trackObject()

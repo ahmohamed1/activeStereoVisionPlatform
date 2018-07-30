@@ -144,7 +144,7 @@ int main(int argc,char** argv)
   ros::NodeHandle nh;
   DisparityClass disparityClass(sizee);
   //n is in the node's namespace
-  string calibration_file = "003_used_data";
+  string calibration_file = "005_used_data";
   ros::NodeHandle n("~");
   n.getParam("calibration_file", calibration_file);
   ROS_INFO("calibration file loaded was %s", calibration_file.c_str());
@@ -180,7 +180,7 @@ int main(int argc,char** argv)
 
 
   //Load the calibraton date from the raw dat
-  string filename = "/home/abdulla/dev/Active-stereo-Vision-Platform/calibration_data/" + calibration_file + ".xml";
+  string filename = "/home/abdulla/dev/Active-stereo-Vision-Platform/ros/src/platform_vision/calibration/" + calibration_file + ".xml";
   FileStorage fr(filename, FileStorage::READ);
   fr["interinsic1"] >> A1;
   fr["interinsic2"] >> A2;
@@ -401,17 +401,26 @@ int main(int argc,char** argv)
 
 
            disp = disp(New_window_size);
-           // cout << "333333"<<endl;
            undisFrame1 = undisFrame1(New_window_size);
-           threshold(disp, disp,depth_threshold_threshold, 255, 3 );
+           Mat processPointCloud;
+           Mat RG, BY;
+           tie (RG, BY) = BGRColorOppenetProcess(undisFrame1);
+           // cout << disp.size() << "  " << RG.size() <<endl;
+           Mat dispMask;
+           cv::bitwise_and(disp, disp, dispMask, RG);
+           // cout << "333333"<<endl;
+           // threshold(disp, disp,depth_threshold_threshold, 255, 3 );
            /////////////////////////////////////////////////
            // Find the measurement
            Mat pointCloud;
            // drawBourderAroundObject(undisFrame1, &disp);
-          reprojectImageTo3D(disp, pointCloud, Q, true, CV_32F);
+          reprojectImageTo3D(dispMask, pointCloud, Q, true, CV_32F);
+
+
+
           // cout << "44444"<<endl;
           //Calculate the point cloud
-           pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud =  disparityClass.MatToPoinXYZ(disp, pointCloud, undisFrame1);
+           pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud =  disparityClass.MatToPoinXYZ(dispMask, pointCloud, undisFrame1);
           if (mouseMove == true){
            // This just to find the object
            Mat cropedDisparity = disp(selectedRectangle);
@@ -423,7 +432,7 @@ int main(int argc,char** argv)
            sensor_msgs::PointCloud2 output;
            pcl::toROSMsg(*pointcloud, output);
            output.header.stamp = ros::Time::now();
-           output.header.frame_id = "camera_link";
+           output.header.frame_id = "depth_camera";
            pointCloud_pub.publish(output);
 
           /////////////////////////////////////////////////////////////////////
