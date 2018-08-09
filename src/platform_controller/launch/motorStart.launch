@@ -7,12 +7,13 @@
   </node>
 
 <!-- with tilt motors-->
-  <node name="arbotix" pkg="arbotix_python" type="arbotix_driver" output="screen">
+  <!-- <node name="arbotix" pkg="arbotix_python" type="arbotix_driver" output="screen">
       <rosparam file="$(find arbotix_python)/config/motors.yaml" command="load" />
-  </node>
+      <rosparam param="~port"                  default= "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AL00CJWR-if00-port0"/>
+  </node> -->
 
 	<!-- start pan motors-->
-        <arg name="device_name"                default="/dev/usb2dynamixel"/>
+        <arg name="device_name"                default="/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AI027ZF1-if00-port0"/>
         <arg name="baud_rate"                  default="1000000"/>
 
         <arg name="scan_range"                 default="10"/>
@@ -37,3 +38,4 @@
 
 
 </launch>
+<!-- /dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AL00CJWR-if00-port0  /// arbox-->

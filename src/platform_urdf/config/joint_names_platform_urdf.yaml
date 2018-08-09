@@ -1,0 +1,1 @@
+controller_joint_names: ['left_baseline_joint', 'left_pan_joint', 'left_tilt_joint', 'right_baseline_joint', 'right_pan_joint', 'right_tilit_joint', ]

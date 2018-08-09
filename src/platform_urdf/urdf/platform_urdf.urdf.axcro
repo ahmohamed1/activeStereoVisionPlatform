@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<robot
+  name="platform_urdf">
+  <link
+    name="camera_link">
+    <inertial>
+      <origin
+        xyz="-2.56875676977367E-05 -0.0890908664495148 -0.000381025370678086"
+        rpy="0 0 0" />
+      <mass
+        value="1.09405988740329" />
+      <inertia
+        ixx="0.0527353243621586"
+        ixy="-9.62804184588694E-06"
+        ixz="-7.76403500735933E-07"
+        iyy="0.000678325181807823"
+        iyz="-0.000959086674104492"
+        izz="0.0520570275067982" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/camera_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/camera_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="left_link">
+    <inertial>
+      <origin
+        xyz="-0.000636487885275826 -0.0172813993185202 -0.106651914144927"
+        rpy="0 0 0" />
+      <mass
+        value="0.259896268391157" />
+      <inertia
+        ixx="0.00010567254562811"
+        ixy="5.29283037273839E-09"
+        ixz="-1.78917175146002E-07"
+        iyy="0.000123312975037818"
+        iyz="-8.16277479149003E-06"
+        izz="5.1426480812361E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/left_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/left_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="left_baseline_joint"
+    type="prismatic">
+    <origin
+      xyz="0.00072287 -0.00 0.18593"
+      rpy="0 0 0" />
+    <parent
+      link="camera_link" />
+    <child
+      link="left_link" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="0.025"
+      upper="0.5"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="left_pan_Link">
+    <inertial>
+      <origin
+        xyz="-2.94575059137103E-09 -0.0350930350915603 -0.0305557467374345"
+        rpy="0 0 0" />
+      <mass
+        value="0.0755042956951029" />
+      <inertia
+        ixx="4.02825797336067E-05"
+        ixy="1.27992179056511E-12"
+        ixz="3.45141739942267E-12"
+        iyy="3.18314904834008E-05"
+        iyz="1.25254694302963E-05"
+        izz="8.45108925021741E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/left_pan_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/left_pan_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="left_pan_joint"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="left_link" />
+    <child
+      link="left_pan_Link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1.5708"
+      upper="1.5708"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="left_tilt_Link">
+    <inertial>
+      <origin
+        xyz="-0.0316084973437819 -0.00622472612535253 -0.0142005705562043"
+        rpy="0 0 0" />
+      <mass
+        value="0.0524938738217062" />
+      <inertia
+        ixx="5.79229375488953E-06"
+        ixy="5.00461060239241E-06"
+        ixz="-2.38314465843023E-06"
+        iyy="6.37521084953029E-06"
+        iyz="2.24839305684749E-06"
+        izz="1.00261808015584E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/left_tilt_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/left_tilt_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="left_tilt_joint"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="left_pan_Link" />
+    <child
+      link="left_tilt_Link" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="-0.69813"
+      upper="1.5708"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="left_camera_link">
+    <inertial>
+      <origin
+        xyz="-5.79159281643982E-09 -0.000284413149096385 -0.0197302864044062"
+        rpy="0 0 0" />
+      <mass
+        value="0.086752409372661" />
+      <inertia
+        ixx="0"
+        ixy="0"
+        ixz="0"
+        iyy="0"
+        iyz="0"
+        izz="0" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/left_camera_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.250980392156863 0.250980392156863 0.250980392156863 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/left_camera_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="left_camera_joint"
+    type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="-1.5708 0 -1.5708" />
+    <parent
+      link="left_tilt_Link" />
+    <child
+      link="left_camera_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="right_Link">
+    <inertial>
+      <origin
+        xyz="7.89338298870172E-05 0.0172813993187475 -0.106168398888851"
+        rpy="0 0 0" />
+      <mass
+        value="0.259896268391157" />
+      <inertia
+        ixx="0.000105586435081742"
+        ixy="-3.87452274694629E-08"
+        ixz="-1.14846761298139E-07"
+        iyy="0.000123225785208494"
+        iyz="8.14016610628381E-06"
+        izz="5.14254015294021E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/right_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/right_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="right_baseline_joint"
+    type="prismatic">
+    <origin
+      xyz="0 0.0 0.18544"
+      rpy="0 0 0" />
+    <parent
+      link="camera_link" />
+    <child
+      link="right_Link" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="-0.5"
+      upper="-0.025"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="right_pan_Link">
+    <inertial>
+      <origin
+        xyz="-2.93008802447042E-09 0.0350930350998783 -0.0305557467743287"
+        rpy="0 0 0" />
+      <mass
+        value="0.0755042956096525" />
+      <inertia
+        ixx="4.02825796634919E-05"
+        ixy="-1.27296756234653E-12"
+        ixz="3.43336346697995E-12"
+        iyy="3.18314904175057E-05"
+        iyz="-1.25254694482016E-05"
+        izz="8.45108924599766E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/right_pan_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.501960784313725 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/right_pan_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="right_pan_joint"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="right_Link" />
+    <child
+      link="right_pan_Link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1.5708"
+      upper="1.5708"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="right_tilt_Link">
+    <inertial>
+      <origin
+        xyz="-0.0343677811222608 0.00320858767397217 -0.0165767256463617"
+        rpy="0 0 0" />
+      <mass
+        value="0.0476720653657511" />
+      <inertia
+        ixx="0"
+        ixy="0"
+        ixz="0"
+        iyy="0"
+        iyz="0"
+        izz="0" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/right_tilt_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/right_tilt_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="right_tilit_joint"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="right_pan_Link" />
+    <child
+      link="right_tilt_Link" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="-0.698132"
+      upper="1.5708"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="right_camera_Link">
+    <inertial>
+      <origin
+        xyz="1.93569790751802E-09 0.000251753900028406 -0.0197307133023364"
+        rpy="0 0 0" />
+      <mass
+        value="0.0867523560162993" />
+      <inertia
+        ixx="0"
+        ixy="0"
+        ixz="0"
+        iyy="0"
+        iyz="0"
+        izz="0" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/right_camera_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.250980392156863 0.250980392156863 0.250980392156863 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://platform_urdf/meshes/right_camera_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="right_camera_joint"
+    type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="-1.5708 0 -1.5708" />
+    <parent
+      link="right_tilt_Link" />
+    <child
+      link="right_camera_Link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+</robot>
