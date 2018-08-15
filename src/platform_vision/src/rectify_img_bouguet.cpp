@@ -219,16 +219,16 @@ int main(int argc,char** argv)
 	    hconcat(undisFrame1,undisFrame2,combine_img);
 	    //draw lines
 	    for(int i=0; i< 20 ; i++){
-		line(combine_img,Point(0,(i*combine_img.rows/20)),Point(combine_img.cols,(i*combine_img.rows/20)),Scalar(0,0,255),1);
+	      line(combine_img,Point(0,(i*combine_img.rows/20)),Point(combine_img.cols,(i*combine_img.rows/20)),Scalar(0,0,255),1);
 	      }
 
-        namedWindow("rectified image",WINDOW_AUTOSIZE);
+      namedWindow("rectified image",WINDOW_AUTOSIZE);
 	    imshow("rectified image",combine_img);
 	    //cout << " To take another picture press c, to change the angle a, and q to exit the program: " << endl;
 
 	    char ikey = waitKey('q');
 	    if(ikey == 'q'){
-		break;
+		      break;
 	      }else if(ikey == 's'){  // save the images
 		stringstream ssl;
 		ssl<<"/home/abdulla/dev/workshop/PhD/Trctification_based_on_bouguet/001_image_test_2/"<<np_img << "_left" <<".jpg";

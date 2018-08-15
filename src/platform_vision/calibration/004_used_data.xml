@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<interinsic1 type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    2743.703053 0.000000 928.211416
+    0.000000 2731.163661 514.518172
+    0.000000 0.000000 1.000000</data></interinsic1>
+<interinsic2 type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    2716.722992 0.000000 1004.208693
+    0.000000 2703.575848 507.063819
+    0.000000 0.000000 1.000000</data></interinsic2>
+<distCoeffs1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    -0.010704 0.040530 -0.003975 -0.005571 0.000000</data></distCoeffs1>
+<distCoeffs2 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    -0.024701 0.166204 -0.002336 -0.001715 0.000000</data></distCoeffs2>
+<R type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    0.9999598951622735 -0.0036714196215852464 -0.008168766431804782
+    0.0034801587350716534 0.9997223216938748 -0.02330596494864336
+    0.008252064119591307 0.02327660166284862 0.9996950051154577</data></R>
+<T type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    0.09856665606028742 -0.0005207094362347457 0.0005535839580776297</data></T>
+<E type_id="opencv-matrix">
+  <rows>0</rows>
+  <cols>0</cols>
+  <dt>u</dt>
+  <data></data></E>
+<F type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    -8.4021244490091986e-10 2.2894407938303797e-07
+    -2.5310509077814283e-05 -1.3361971031035455e-07
+    2.4553708560841960e-08 2.2264894240654323e-02 8.9569936345243212e-05
+    -2.2056079221687362e-02 1.</data></F>
+<Error type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    4.0737237222718758e-01 2.7476028005241881e-01 3.7008162590954369e-01</data></Error>
+<actual_angle type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>f</dt>
+  <data>
+    0. 0. 0.</data></actual_angle>
+</opencv_storage>

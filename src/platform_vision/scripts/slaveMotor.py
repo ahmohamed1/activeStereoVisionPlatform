@@ -14,7 +14,7 @@ args=vars(ap.parse_args())
 ScaleDown = args['scale']
 algorithm = args['algorithm']
 def main(scale):
-    rospy.init_node('SlaveMotorController', anonymous = True)
+    rospy.init_node('Slave_Motor_Controller', anonymous = False)
     slaveController = SlaveCameraController(activeTilitController=True, algorithmToUse = algorithm, scaleDown=ScaleDown)
     try:
         slaveController.trackObject()

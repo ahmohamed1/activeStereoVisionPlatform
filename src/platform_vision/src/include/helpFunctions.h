@@ -14,6 +14,42 @@ cv::Mat convertROSMat2OpencvMat(const sensor_msgs::ImageConstPtr& img_msg){
   }
 }
 
+#include <tuple>
+
+tuple<cv::Mat, cv::Mat, cv::Mat, cv::Mat> ExtractRGBI(cv::Mat image){
+  Mat channel[3];
+  Mat I;
+  cv::split(image, channel);
+
+  cv::cvtColor(image, I, cv::COLOR_BGR2GRAY);
+
+  return make_tuple(channel[0], channel[1], channel[2], I);
+
+}
+
+tuple<cv::Mat, cv::Mat> BGRColorOppenetProcess(Mat image){
+    Mat R, G, B, I;
+    tie(B, G, R, I)= ExtractRGBI(image);
+
+    // Find the maximum in in the images
+    Mat MaxBGR = cv::max(B,cv::max(R,G));
+    Mat RGMin = cv::min(R,G);
+
+    // find the oppenet R-G
+    int thresholder = 20;
+    Mat RG = (R-G);
+    RG.setTo(0, RG < thresholder);
+    RG.setTo(1, RG > thresholder);
+    //Apply Mask
+    Mat mask;
+    cv::bitwise_and(image,image,mask,RG);
+    cv::imshow("mask", mask);
+
+    Mat BY = (B - RGMin);// / MaxBGR;
+    cv::imshow("RG", RG);
+    return make_tuple(RG, BY);
+}
+
 class GetImageClass{
 public:
   GetImageClass(ros::NodeHandle nh, string ImageName){

@@ -12,6 +12,9 @@
   <node pkg="tf" type="static_transform_publisher" name="world_to_camera_link"
   args="0 0 0 0 0 0 /world /camera_link 10" />
 
+  <node pkg="tf" type="static_transform_publisher" name="camera_link_to_depth_camera"
+  args="0 0 0 -1.57079632679 0 -1.57079632679 /camera_link /depth_camera 10" />
+
 <group ns="stereo" >
 <group ns="left">
     <node pkg="nodelet" type="nodelet" name="left_camera_nodelet_manager" args="manager" />
