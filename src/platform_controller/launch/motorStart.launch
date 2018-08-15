@@ -7,10 +7,9 @@
   </node>
 
 <!-- with tilt motors-->
-  <!-- <node name="arbotix" pkg="arbotix_python" type="arbotix_driver" output="screen">
+  <node name="arbotix" pkg="arbotix_python" type="arbotix_driver" output="screen">
       <rosparam file="$(find arbotix_python)/config/motors.yaml" command="load" />
-      <rosparam param="~port"                  default= "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AL00CJWR-if00-port0"/>
-  </node> -->
+  </node>
 
 	<!-- start pan motors-->
         <arg name="device_name"                default="/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AI027ZF1-if00-port0"/>
@@ -33,7 +32,7 @@
 
 
 <!-- start the controller node -->
-<node name="platform_controller_gui" pkg="platform_controller" type="platform_controller.py" />
+<!-- <node name="platform_controller_gui" pkg="platform_controller" type="platform_controller.py" /> -->
 <node name="control_tilt_motors" pkg="platform_controller" type="control_tilt_motors" output="screen"/>
 
 

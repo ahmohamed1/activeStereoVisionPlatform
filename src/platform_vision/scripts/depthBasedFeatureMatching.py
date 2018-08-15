@@ -1,8 +1,10 @@
+#!/usr/bin/env python
+import rospy
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 import numpy.linalg as la
-
+from platform_vision.helpFunctions import GetImageClass
 # import os
 # import time
 
@@ -441,7 +443,7 @@ class ComputeDepthBasedFeature:
 
 
     def rectifyWrapper(self, imgL, imgR, lines1, lines2, pts1, pts2, F):
-        print ('1')
+        # print ('1')
         # We need to apply the perspective transformation
         # e.g. http://www.pyimagesearch.com/2014/05/05/building-pokedex-python-opencv-perspective-warping-step-5-6/
 
@@ -462,7 +464,7 @@ class ComputeDepthBasedFeature:
             # print ('H1 :' , retval)
         except cv2.error:
             print "cv2.error"
-            H1, H2 = self.rectify_uncalibrated(lines1, lines2, pts1, pts2, F, imgsize)
+            H1, H2, Q = self.rectify_uncalibrated(lines1, lines2, pts1, pts2, F, imgsize)
             print "applying the custom-rectify code then as the cv2.stereoRectifyUncalibrated failed"
 
         # http://stackoverflow.com/questions/19704369/stereorectifyuncalibrated-not-accepting-same-array-as-findfundamentalmat
@@ -678,7 +680,7 @@ class ComputeDepthBasedFeature:
         wls_filter.setLambda(lmbda)
         wls_filter.setSigmaColor(sigma)
 
-        print('computing disparity...')
+        # print('computing disparity...')
         displ = left_matcher.compute(imgL, imgR)  # .astype(np.float32)/16
         dispr = right_matcher.compute(imgR, imgL)  # .astype(np.float32)/16
         displ = np.int16(displ)
@@ -692,12 +694,13 @@ class ComputeDepthBasedFeature:
         RG = np.uint8(RG)
         # print ('imgSize', imgl.dtype )
         # print ('RG', RG.dtype )
-
+        cv2.namedWindow('Disparity Map', cv2.WINDOW_NORMAL)
+        cv2.resizeWindow('Disparity Map', (900,600))
         cv2.imshow('Disparity Map', filteredImg)
         # filteredImg = cv2.bitwise_and(filteredImg, filteredImg, mask=RG)
-        cv2.imshow('imgl Map', imgl)
+        # cv2.imshow('imgl Map', imgl)
         cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.destroyAllWindows()
         return filteredImg
 
     def generatePointCloud(self, rgb, depth, Q):
@@ -808,9 +811,9 @@ class ComputeDepthBasedFeature:
     # MAIN CODE
     # ============
 
-    def mainLoop(self,ImageNameRight,ImageNameLeft):
-        imgL = cv2.imread('/home/abdulla/dev/Data/1left.jpg', 1)
-        imgR = cv2.imread('/home/abdulla/dev/Data/1right.jpg', 1)
+    def mainLoop(self,imgL,imgR):
+        # imgL = cv2.imread('/home/abdulla/dev/Data/1left.jpg', 1)
+        # imgR = cv2.imread('/home/abdulla/dev/Data/1right.jpg', 1)
 
         # Initiate SURF detector
         surf_threshold = 6000
@@ -836,8 +839,11 @@ class ComputeDepthBasedFeature:
         # Compute the Fundamental matrix
         #cv2.RANSAC
         #cv2.FM_LMEDS
+        #cv2.FM_8POINT
+        #cv2.FM_LMEDS
         F, mask = cv2.findFundamentalMat(pts1,pts2,cv2.FM_LMEDS)
 
+        # print('F size: ', F.shape)
         # We select only inlier points based on fundamental matrix
         pts1 = pts1[mask.ravel()==1]
         pts2 = pts2[mask.ravel()==1]
@@ -862,80 +868,12 @@ class ComputeDepthBasedFeature:
         # disparityMapSGM(rimg1, rimg2)
         disp = self.postfilterDisparity(rimg1, rimg2)
 
-        pointCloud = cv2.reprojectImageTo3D(disp, Q, ddepth=cv2.CV_32F)
-        # print ('pointCloud shape: ', pointCloud.shape)
-        cv2.imshow('PointCloud', pointCloud)
+        # pointCloud = cv2.reprojectImageTo3D(disp, Q, ddepth=cv2.CV_32F)
+        # # print ('pointCloud shape: ', pointCloud.shape)
+        # cv2.imshow('PointCloud', pointCloud)
         cv2.waitKey(0)
-        self.generatePointCloud(rimg1, pointCloud, Q)
+        # self.generatePointCloud(rimg1, pointCloud, Q)
 
-
-
-        """
-        disparityBM = disparityMapStereo(rimg1, rimg2)
-
-
-        # Segment the image to foreground/background, so that the anaglyph composite
-        # is only created from the foreground
-        foreground, background = segmentImages(rimg1, rimg2)
-
-        # Create the anaglyph
-        anaglyph = anaglyph(rimg1[:,:,0:3], rimg2[:,:,0:3], optimized_anaglyph)
-        # anaglyph = anaglyph(rimg1[:,:,0:3], tr_img2[:,:,0:3], optimized_anaglyph)
-        # anaglyph = anaglyphWithForeground(rimg1[:,:,0:3], rimg2[:,:,0:3], optimized_anaglyph, foreground, background)
-
-        cv2.imshow('anaglyph', anaglyph)
-        cv2.waitKey(0)
-        # DISPLAY
-        # ============
-
-        print "Keypoints from LEFT: " + str(len(kp1)) # 943 at threshold = 400; 44 at threshold=6000, 93 at thre = 4000
-        print "Keypoints from RIGHT: " + str(len(kp2)) # 943 at threshold = 400; 44 at threshold=6000, 102 at thre = 4000
-
-        print "NOT WORKING YET:"
-        # print "H2*x2, and H0*x1 not working" # fixed by transposing pts1, and pts2
-        print "Fix the Camera matrix K"
-        print ".. no distortion at the moment" # not needed really for 50mm/f1.8, but still
-
-        # cv2.drawMatchesKnn expects list of lists as matches.
-        # http://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_feature2d/py_matcher/py_matcher.html
-        imgDummy = np.zeros((1,1))
-        img5 = cv2.drawMatches(imgL,kp1,imgR,kp2,good[:10],imgDummy)
-
-        # Draw the points for display
-        img2_L = cv2.drawKeypoints(imgL,kp1,None,(255,0,0),4)
-        img2_R = cv2.drawKeypoints(imgR,kp2,None,(255,0,0),4)
-
-        # PLOT 1
-        # subplot customization: subplot2grid
-        # http://matplotlib.org/users/gridspec.html
-        plt.close('all') # will close all figures
-
-
-        fig = plt.figure(facecolor='white')
-        #fig.set_figheight(11)
-        #fig.set_figwidth(8.5)
-
-        # subplot layout
-        rows = 3
-        cols = 3
-
-        ax1 = plt.subplot2grid((rows,cols), (0,0)), plt.axis('off')
-        plt.imshow(anaglyph), plt.title('anaglyph')
-
-        ax4 = plt.subplot2grid((rows,cols), (1,1), colspan=2, rowspan=2)
-        plt.imshow(disparityBM,  cmap=plt.get_cmap('gray')), plt.title('Disparity'), plt.axis('off'),
-
-        ax5 = plt.subplot2grid((rows,cols), (1,0))
-        plt.imshow(rimg1), plt.title('Rectified Left'), plt.axis('off')
-        ax6 = plt.subplot2grid((rows,cols), (2,0))
-        plt.imshow(rimg2), plt.title('Rectified Right'), plt.axis('off')
-
-
-        ax2 = plt.subplot2grid((rows,cols), (0,1), colspan=2)
-        plt.imshow(img5), plt.title('Matching Features'), plt.axis('off')
-
-        plt.show()
-        """
 
 def loadPointCloudAndShow():
     import pcl
@@ -995,11 +933,22 @@ def loadPointCloudAndShow():
     # pcl.save(extract_outliers, filename)
 
 def main():
+    rospy.init_node('computeDepthBasedFeature', anonymous = False)
     computeDepthBasedFeature = ComputeDepthBasedFeature()
 
-    leftImage = None
-    rightImage = None
-    computeDepthBasedFeature.mainLoop(rightImage, leftImage)
+    left_image_Caller = GetImageClass('left')
+    right_image_Caller = GetImageClass('right')
+    # imgL = cv2.imread('/home/abdulla/dev/Data/2left.jpg', 1)
+    # imgR = cv2.imread('/home/abdulla/dev/Data/2right.jpg', 1)
+
+    while not rospy.is_shutdown():
+        imgL = left_image_Caller.getImage()
+        imgR = right_image_Caller.getImage()
+        if imgL is not None and imgR is not None:
+            # cv2.imshow('test left', imgL)
+            # cv2.imshow('test right', imgR)
+            # cv2.waitKey(1)
+            computeDepthBasedFeature.mainLoop(imgL, imgR)
 
 if __name__ == "__main__":
     # loadPointCloudAndShow()
