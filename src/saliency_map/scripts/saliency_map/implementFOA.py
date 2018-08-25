@@ -40,14 +40,16 @@ imageName = args['image']
 LoopThroughAllImages = args['loop']
 FindTime = True
 saveTemplate = False
-filenameModel = '../../config/linear_regressor.pkl' #'GaussianNaiveBayes.sav'
-
+filenameModel = '/home/abdulla/dev/activeStereoVisionPlatform/src/saliency_map/config/linear_regressor.pkl' #'GaussianNaiveBayes.sav'
+with open(filenameModel, 'rb') as file:
+	trainedModel = pickle.load(file)
+print (trainedModel)
 
 def ComputeFOA(imageFullSize):
-
-    if imageFullSize is None:
-        print('There is no image!!')
-        exit()
+	ListOfTargetsInformation = []
+	if imageFullSize is None:
+		print('There is no image!!')
+		exit()
 
 	h,w,c = imageFullSize.shape
 	w_new = 640
@@ -58,6 +60,7 @@ def ComputeFOA(imageFullSize):
 
 	img = cv2.resize(imageFullSize,(640,420))
 	imgsize = img.shape
+	temp_image = img.copy()
 	img_width  = imgsize[1]
 	img_height = imgsize[0]
 	sm = pySaliencyMap.pySaliencyMap(img_width, img_height)
@@ -74,19 +77,27 @@ def ComputeFOA(imageFullSize):
 	targetListInOneScene = []
 	index = 0
 	savedImageIndex = 0
-	ListOfTargetsInformation = []
+
 	while(probability > minimumPropapility):
+		cropedImage = None
 		# probability, corrected_image, targetPose = trackingSaliency(img, corrected_image, listOfObjects,  minimumPropapility,model= trainedModel,  loopindex= index)
 		probability, corrected_image, targetPose, probabilitOfTomato = trackingSaliencyRegionBase(img, corrected_image, minimumPropapility,model= trainedModel,  loopindex= index)
-		# index += 1
-		if targetPose != None:
+		# print("targetPose ", targetPose)
+		if targetPose != [0,0,0]:
 			# cropedRegionOfInterest(imageFullSize, targetPose, ratio_width, ratio_hieght, targetListInOneScene, extraRaduis =10)
-			cropedRegionOfInterest(temp_image, targetPose, 1, 1, targetListInOneScene, extraRaduis =10)
+			cropedImage = cropedRegionOfInterest(temp_image, targetPose, 1, 1, targetListInOneScene, extraRaduis =10)
+			if cropedImage != None:
+				# cv2.imshow('cropedTarget', cropedImage)
+				# cv2.waitKey(1)
+				list_ = [index, probabilitOfTomato, targetPose[2], [targetPose[0], targetPose[1]], cropedImage]
+				ListOfTargetsInformation.append(list_)
 			index += 1
+		# else:
+		# 	print('This is not target')
 		if checkProbability:
 			minimumPropapility = abs(probability - 0.3)
 			checkProbability = False
-
+		cv2.imshow('FOA', img)
 		ikey = cv2.waitKey(1)
 		if ikey == ord('q'):
 			exit()
@@ -96,10 +107,8 @@ def ComputeFOA(imageFullSize):
 			cv2.imwrite('../../data/imageOutPutSaliency.png', ccc)
 
 		# add the information into a ListOfTargets
-		list_ = [index, probabilitOfTomato, targetPose[2], [targetPose[0], targetPose[1]]]
-		ListOfTargetsInformation.append(list_)
 	print ('Total targets: ',len(targetListInOneScene))
 	print ("Find all tomatos with propability bigger than % ",minimumPropapility*100 )
 	ikey = cv2.waitKey(1)
-	cv2.destroyAllWindows()
-    return ListOfTargetsInformation   #[['idea', '2D propability', '2D size', '2D pose' ]]
+	# cv2.destroyAllWindows()
+	return ListOfTargetsInformation   #[['idea', '2D propability', '2D size', '2D pose' ]]

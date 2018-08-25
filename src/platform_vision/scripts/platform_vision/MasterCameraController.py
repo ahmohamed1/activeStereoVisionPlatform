@@ -24,13 +24,14 @@ DEBUG = True
 
 
 class MasterCameraController:
-    def __init__(self, algorithmForTracking, suspendMotor = True ,saveData=False, ScaleDown=False):
+    def __init__(self, algorithmForTracking, suspendMotor = True ,saveData=False, ScaleDown=False, visualAttention=False):
+        # if visualAttention == False:
         cv2.namedWindow('Master Camera', cv2.WINDOW_NORMAL)
         self.ScaleDown = ScaleDown
         self.templateSize = 0.5
         if self.ScaleDown:
             self.imageSize = np.array([ int(2048/2), int(1080/2)])
-            self.thresholdMotorController = np.array([20,5])
+            self.thresholdMotorController = np.array([25,10])
             self.pyramidLayer = 3
         else:
             self.imageSize = np.array([2048 , 1080])
@@ -56,7 +57,7 @@ class MasterCameraController:
             self.processImageBasedColor = trackByColor.ProcessImageBasedColor(self.imageSize, True)
             self.PNCC = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel = self.pyramidLayer, windowSize = 150,
                                                  grayImage = False , showImage = True,drawDifferencesInImage= False,
-                                                 operatingName = 'Master  ')
+                                                 operatingName = 'Master')
 
             self.pyramidPNCCState = True
             self.TemplateList = []
@@ -64,10 +65,12 @@ class MasterCameraController:
         elif self.algorithmForTracking == 'PNCC':
             self.PNCC = PNCC.FastMatchingPyramid(self.imageSize, pyramidLevel = self.pyramidLayer, windowSize = 51,
                                                 grayImage = False, showImage = True,drawDifferencesInImage= False,
-                                                operatingName = 'Master  ')
+                                                operatingName = 'Master')
 
             self.TemplateCenter = np.array([0,0])
-            cv2.resizeWindow('Master Camera', (900,600))
+            # if visualAttention != False:
+            cv2.resizeWindow('Master Camera', (640,420))
+            cv2.moveWindow('Master Camera', 1000, 10)
 
         self.motorCountForTerminate = 0
         self.saveDataAble = saveData
@@ -102,7 +105,7 @@ class MasterCameraController:
         self.motorPos[0].data = self.currentPos[0]
         self.motorPos[1].data = self.currentPos[1]
         # set the motor to the zero position
-        # self.motorPublisher.publish(self.motorPos[0])
+        self.motorPublisher.publish(self.motorPos[0])
         # self.tiltMotorPublisher.publish(self.motorPos[1])
         self.terminateButton = 0
     def __del__(self):
@@ -137,9 +140,12 @@ class MasterCameraController:
 
     def setTemplateSize(self, size):
         if self.algorithmForTracking == 'PNCC':
-            self.PNCC.setTemplateSize()
+            self.PNCC.setTemplateSize(size)
         else:
             pass
+    def setTemplateImage(self, Template):
+        self.PNCC.setTemplate(Template)
+
 
     def ideaToTrackCallback(self,data):
         self.ideatToTrack = data.data
@@ -214,6 +220,7 @@ class MasterCameraController:
                 self.PNCC.createTemplate(image, self.TemplateCenter)
                 self.TemplateCenter = np.array([0, 0])
             centerPoint = self.PNCC.trackObject(image)
+
             lineSize = 20
             imageToShow = cv2.line(image,(self.imageSize[0]/2, self.imageSize[1]/2-lineSize),(self.imageSize[0]/2, self.imageSize[1]/2+lineSize),(0,0,255),2)
             imageToShow = cv2.line(image,(self.imageSize[0]/2-lineSize, self.imageSize[1]/2),(self.imageSize[0]/2+lineSize, self.imageSize[1]/2),(0,0,255),2)
@@ -260,8 +267,8 @@ class MasterCameraController:
             # Return the PNCCState to False
                 print similarity
                 self.TemplateList.append(self.PNCC.getTemplate())
-            cv2.imshow('Template', self.PNCC.getTemplate())
-            cv2.waitKey(0)
+            # cv2.imshow('Template', self.PNCC.getTemplate())
+            # cv2.waitKey(1)
             self.pyramidPNCCState = False
 
         if self.pyramidPNCCState == False:
@@ -277,17 +284,23 @@ class MasterCameraController:
             cv2.setMouseCallback('Master Camera', self.my_mouse_callback)
         panMotorstate = None
         tiltMotorState = None
+        temp_ = self.PNCC.getTemplate()
+        if temp_ != None:
+            cv2.imshow('Template', self.PNCC.getTemplate())
+            cv2.waitKey(1)
+        else:
+            print("No Template!!")
         while not rospy.is_shutdown():
             rate.sleep()
             if self.image is not None:
                 ## call the function
                 differences = self.trackObjectInImage(self.image)
-                print ("diff: i%", differences)
-
+                # print ("diff: i%", differences)
                 if self.suspendMotor:
                     panMotorstate = self.moveMotor(differences[0])
                     # self.moveMotorSpeed(differences[0])
                     tiltMotorState = self.TiltMoveMotor(differences[1])
+                    # print("Master Pan state: ",panMotorstate, " Master tilt state: ",tiltMotorState, )
                 ikey = cv2.waitKey(3)
                 # self.createWindows('image', self.image)
                 if self.terminateButton == 2 :
@@ -298,19 +311,15 @@ class MasterCameraController:
                 elif ikey == ord('n'):
                     print ("Next object")
                     self.pyramidPNCCState = True
-                    self.incremantel = 0
-                # if self.incremantel == 20:
-                #     print ("Next object")
-                #     self.pyramidPNCCState = True
-                #     self.incremantel = 0
             else:
                 print("No Image To Process!!!")
             if visualAttention == True:
                 if panMotorstate and tiltMotorState:
                     self.motorCountForTerminate += 1
-
+                    # print("coutns: ", self.motorCountForTerminate)
                 if self.motorCountForTerminate == 15:
-                    print('Target centered')
+                    # print('Target centered')
+                    self.motorCountForTerminate = 0
                     break
 
     def createWindows(self, imageName, imageToShow, WindowSize = (640,320)):
@@ -341,7 +350,7 @@ class MasterCameraController:
             # print("Motor speed: ", self.currentPos)
             self.motorPublisher.publish(self.motorPos[0])
         else:
-            print "Pan Center Position"
+            # print "Pan Center Position"
             state = True
         # Save the speed
         if self.saveDataAble == True:
@@ -368,6 +377,7 @@ class MasterCameraController:
     #         print "Pan Center Position"
 
     def TiltMoveMotor(self,value):
+        state = False
         TiltSpeed = 0
         if self.independedTiltMotor:
             TiltSpeed = np.sign(value) * math.exp(abs(value)*self.exponatialGain[1])*self.mapExponatialValue[1]
@@ -386,7 +396,10 @@ class MasterCameraController:
             # print("Motor speed: ", self.TiltCurrentPos)
             self.tiltMotorPublisher.publish(self.motorPos[1])
         else:
-            print "Tilt Center Position"
+            # print "Tilt Center Position"
+            state = True
+
+        return state
 
     def lowPassFilter(self, speed):
         pass

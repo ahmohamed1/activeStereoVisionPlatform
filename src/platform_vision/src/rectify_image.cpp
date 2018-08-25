@@ -132,8 +132,14 @@ int main(int argc,char** argv)
 {
   bool resize_image_for_disparity = true;
   // std::cout << argv[1] << std::endl;
-  bool my_bool = argv[1];
-  if (my_bool != false){
+
+  string calibration_file = "005_used_data";
+  if(argc > 1 ){
+    calibration_file = argv[1];
+  }
+
+  string my_bool = argv[2];
+  if (my_bool == "true"){
     resize_image_for_disparity = false;
     std::cout << "Full Size Image Processing !!!" << std::endl;
   }else{
@@ -144,7 +150,7 @@ int main(int argc,char** argv)
   ros::NodeHandle nh;
   DisparityClass disparityClass(sizee);
   //n is in the node's namespace
-  string calibration_file = "005_used_data";
+
   ros::NodeHandle n("~");
   n.getParam("calibration_file", calibration_file);
   ROS_INFO("calibration file loaded was %s", calibration_file.c_str());
@@ -161,7 +167,7 @@ int main(int argc,char** argv)
   //////////////////////////////////////////////////////////////////
 
 
-  pcl::visualization::CloudViewer viewer ("Simple Cloud Viewer");
+  // pcl::visualization::CloudViewer viewer ("Simple Cloud Viewer");
   // These storage for the intrinsic and distortion coffeicent
   Mat R = Mat(3, 3, CV_64FC1);
   Mat T;
@@ -180,7 +186,7 @@ int main(int argc,char** argv)
 
 
   //Load the calibraton date from the raw dat
-  string filename = "/home/abdulla/dev/Active-stereo-Vision-Platform/ros/src/platform_vision/calibration/" + calibration_file + ".xml";
+  string filename = "/home/abdulla/dev/activeStereoVisionPlatform/src/platform_vision/calibration/" + calibration_file + ".xml";
   FileStorage fr(filename, FileStorage::READ);
   fr["interinsic1"] >> A1;
   fr["interinsic2"] >> A2;
@@ -240,7 +246,7 @@ int main(int argc,char** argv)
 
         ros::spinOnce();
         char ikey;
-        ikey = cv::waitKey('q');
+        ikey = cv::waitKey(1);
         if(!left_img.empty() && !right_img.empty()){
           disparityClass.update_trackbar_reading_and_odds_numbers();
           Mat img_right = right_img;
@@ -428,7 +434,7 @@ int main(int argc,char** argv)
            pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud =  disparityClass.MatToPoinXYZ(cropedDisparity, pointCloud, leftImageCroped);
          }
          // cout << "555555"<<endl;
-           viewer.showCloud(pointcloud);  // To active this check the begining of the main function to define the viewer
+           // viewer.showCloud(pointcloud);  // To active this check the begining of the main function to define the viewer
            sensor_msgs::PointCloud2 output;
            pcl::toROSMsg(*pointcloud, output);
            output.header.stamp = ros::Time::now();
@@ -507,7 +513,7 @@ int main(int argc,char** argv)
 
             //cout << " To take another picture press c, to change the angle a, and q to exit the program: " << endl;
 
-            char ikey = waitKey('q');
+            char ikey = waitKey(1);
             if(ikey == 'x'){
               start_save_image = true;
             }

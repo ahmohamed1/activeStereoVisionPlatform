@@ -15,6 +15,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from std_msgs.msg import Int64
 from std_msgs.msg import Float64
+from std_msgs.msg import Bool
 
 import os.path
 import platform_vision.PNCC as PNCC
@@ -26,17 +27,17 @@ DEBUG = True
 
 class SlaveCameraController:
     def __init__(self, activeTilitController=False,algorithmToUse= 'PNCC', scaleDown = 0):
-
         self.drawTrackingSystem = DrawTrackingSystem()
-
-
         cv2.namedWindow('Slave Camera', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('Slave Camera', (900,600))
-        self.leftMotorPub = rospy.Publisher('/right/pan/move', Float64, queue_size=2)
+        cv2.resizeWindow('Slave Camera', (640,420))
+        cv2.moveWindow('Slave Camera', 1000, 600)
+        self.motorPublisher = rospy.Publisher('/right/pan/move', Float64, queue_size=2)
         self.left_image_sub = rospy.Subscriber('/stereo/left/image_raw', Image, self.left_image_callback)
         self.right_image_sub = rospy.Subscriber('/stereo/right/image_raw', Image, self.right_image_callback)
         self.templateSizeSub = rospy.Subscriber('/templateSize', Int64, self.templateSizeCallBack)
         self.bridge = CvBridge()
+
+        self.OnTargetPublisher = rospy.Publisher('/onTarget', Bool, queue_size=1)
 
         self.fileExcite = False
         self.activeTilitController = activeTilitController
@@ -81,7 +82,7 @@ class SlaveCameraController:
         self.mapExponatialValue = [0.3, 0.35]
         self.motorMinLimit = -75
         self.motorMaxLimit = 75
-        self.currentPos = [0.0, 10.0]
+        self.currentPos = [0.0, 0.0]
         self.stepDistance = 0.0001
         self.motorPos = [Float64(), Float64()]
         i = 0
@@ -90,7 +91,7 @@ class SlaveCameraController:
             self.motorPos[0].data = self.currentPos[0]
             self.motorPos[1].data = self.currentPos[1]
             # set the motor to the zero position
-            self.leftMotorPub.publish(self.motorPos[0])
+            self.motorPublisher.publish(self.motorPos[0])
             self.slaveTiltMotorPub.publish(self.motorPos[1])
             r.sleep()
             i +=1
@@ -101,7 +102,7 @@ class SlaveCameraController:
     def __del__(self):
         for i in range(10):
             self.currentPos = [0.0, 0.0]
-            self.leftMotorPub.publish(self.motorPos[0])
+            self.motorPublisher.publish(self.motorPos[0])
             self.slaveTiltMotorPub.publish(self.motorPos[1])
 
 
@@ -137,7 +138,7 @@ class SlaveCameraController:
             self.motorPos[1].data = 0.0
             self.currentPos = [0.0, 0.0]
             # set the motor to the zero position
-            self.leftMotorPub.publish(self.motorPos[0])
+            self.motorPublisher.publish(self.motorPos[0])
             self.slaveTiltMotorPub.publish(self.motorPos[1])
 
 
@@ -151,14 +152,14 @@ class SlaveCameraController:
             self.motorPos[0].data = self.currentPos[0]
             # print("Motor speed: ", self.currentPos)
             if self.currentPos[0] < self.motorMaxLimit and self.currentPos[0] > self.motorMinLimit :
-                self.leftMotorPub.publish(self.motorPos[0])
+                self.motorPublisher.publish(self.motorPos[0])
         elif abs(value) <  self.thresholdMotorController[0] and abs(value) >  self.thresholdMotorController[1]:
             self.currentPos[0] -= value * 0.001
             self.motorPos[0].data = self.currentPos[0]
             # print("Motor speed: ", self.currentPos)
-            self.leftMotorPub.publish(self.motorPos[0])
+            self.motorPublisher.publish(self.motorPos[0])
         else:
-            print "Pan Center Position"
+            # print ("Pan Center Position")
             state = True
         return state
 
@@ -179,7 +180,7 @@ class SlaveCameraController:
             # print("Motor speed: ", self.TiltCurrentPos)
             self.slaveTiltMotorPub.publish(self.motorPos[1])
         else:
-            print "Tilt Center Position"
+            # print ("Tilt Center Position")
             state = True
         return state
 
@@ -220,6 +221,8 @@ class SlaveCameraController:
             # _img, centerPoint = self.trackingFeature.kaze_match(template, image)
             cv2.imshow('Slave Camera', _img)
         return centerPoint
+
+    
     def trackObject(self, visualAttention = False):
         if visualAttention:
             self.motorCountForTerminate =0;
@@ -233,6 +236,7 @@ class SlaveCameraController:
             rate.sleep()
             # Publish the coordinate
             self.drawTrackingSystem.calculateThePosition()
+            # print [x,y,z]
             if self.left_image is not None and self.right_image is not None:
                 centerPoint = self.computeTheCenterUsingDifferentAlgorithm(self.left_image,self.right_image )
                 differences = self.calculateDifferences(centerPoint)
@@ -245,17 +249,27 @@ class SlaveCameraController:
                     exit()
                 elif ikey == ord('s'):
                     if self.algorithmToUse == 'PNCC':
-                        self.saveImage(self.fastMatchingPyramid.getTemplate())
+                        # self.saveImage(self.fastMatchingPyramid.getTemplate())
+                        pass
                 if self.terminateButton == 2 :
                     break
-                if visualAttention == True:
-                    if panMotorstate and tiltMotorState:
-                        self.motorCountForTerminate += 1
+                # if visualAttention == True:
+                boolState = Bool()
+                boolState.data = False
+                self.OnTargetPublisher.publish(boolState)
+                if panMotorstate and tiltMotorState:
+                    self.motorCountForTerminate += 1
+                    # print("count: " , self.motorCountForTerminate)
+                if self.motorCountForTerminate > 15:
+                    # print('Target centered')
+                    self.motorCountForTerminate = 0
+                    boolState.data = True
+                    self.OnTargetPublisher.publish(boolState)
+                    # break
 
-                    if self.motorCountForTerminate == 15:
-                        print('Target centered')
-                        break
 
+        [x,y,z] = self.drawTrackingSystem.calculateThePosition()
+        return [x,y,z]
     def calculateDifferences(self, centerPoint):
         if centerPoint is not None:
             return centerPoint - self.imageSize/2

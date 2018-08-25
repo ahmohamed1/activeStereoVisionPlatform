@@ -55,9 +55,9 @@ class DrawTrackingSystem:
 
     def dynamicTFBroadcaster(self, _X, _Y,_Z):
         self.t.header.stamp = rospy.Time.now()
-        self.t.transform.translation.x = _X/100
-        self.t.transform.translation.y = _Y/100
-        self.t.transform.translation.z = _Z/100
+        self.t.transform.translation.x = _X
+        self.t.transform.translation.y = _Y
+        self.t.transform.translation.z = _Z
 
         self.t.transform.rotation.x = 0.0
         self.t.transform.rotation.y = 0.0
@@ -133,6 +133,9 @@ class DrawTrackingSystem:
 
             x ,y, z = self.transformCoordinate(self.targetY, self.targetX, 0.0, -self.tiltingAngle)
 
+            x = round(x,2)
+            y = round(y,2)
+            z = round(z,2)
             # depthTan = B / (math.tan(self.deg2rad(AR)) + math.tan(self.deg2rad(AL)))
             # print "X:", round(x,2) , " Y:", round(y,2) , " Z:", round(z,2)# , " DR: ", round(DR,1), " DL: ", round(DL,1)#, "Depth Based Tan: ", depthTan
             # print "XR:", round(XposR,2) , " YR:", round(DR,2), " XL:", round(XposL,2) , " YL:", round(DL,2)
@@ -141,6 +144,7 @@ class DrawTrackingSystem:
 
             if self.saveDataAble == True:
                 self.TrackingData.append([x,y,z])
+            return [x,y,z]
         except KeyboardInterrupt:
             rospy.ROS_ERROR('Fail in computing the depth, due to dividing by zero!!')
 
@@ -152,7 +156,7 @@ class DrawTrackingSystem:
 
         newPose = Rotation_y * currentPose
 
-        return newPose[0], newPose[1], newPose[2]
+        return newPose[0]/100, newPose[1]/100, newPose[2]/100
 
     def drawSystem(self):
         leftMotorPoint = graphics.Point(-self.actualBaseline/2, 0)

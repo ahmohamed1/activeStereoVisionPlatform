@@ -29,7 +29,7 @@ def waterShedSelectedRigon(img, center, minRadius = 5,maxRadius = 60):
 	thresh = imgProcess.copy()
 	thresh[thresh < raio] = 0
 	thresh[thresh > raio] = 255
-	cv2.imshow('thresh', thresh)
+	# cv2.imshow('thresh', thresh)
 	# cv2.waitKey(0)
 	D = ndimage.distance_transform_edt(thresh, indices=False, sampling=[3,3])
 	localMax = peak_local_max(D, indices=False, min_distance=minRadius, labels=thresh)
@@ -78,7 +78,7 @@ def waterShedSelectedRigon(img, center, minRadius = 5,maxRadius = 60):
 		cv2.drawContours(img, cnts,-1 , (0), -1)
 		cv2.drawContours(img, cnts,-1 , (0), 12)
 	# cv2.circle(imgToSHow, (int(x), int(y)), int(r), color, -1)
-	cv2.imshow('colorImage', imgToSHow)
+	# cv2.imshow('colorImage', imgToSHow)
 	# cv2.imshow('img', img)
 	cv2.waitKey(1)
 	return img, cnts, X, Y, R
@@ -96,7 +96,7 @@ def trackingSaliencyRegionBase(imgRgb,saliencyImage, minimumPropapilityTHreshold
 	X = [[B, G, R]]
 	probabilitOfTomato = model.predict(X)
 	if x != 0 and y != 0 and r !=0:
-		if probabilitOfTomato > 0.5:
+		if probabilitOfTomato > 0.6:
 			if maxVal/255 > minimumPropapilityTHreshold:
 				# (B, G, R) = imgRgb[y, x]
 				# X = [[B, G, R]]
@@ -113,15 +113,15 @@ def trackingSaliencyRegionBase(imgRgb,saliencyImage, minimumPropapilityTHreshold
 				# cover the detected region in salinecy matplotlib
 				cv2.drawContours(saliencyImage, cnt, -1, 0, -1)
 				cv2.drawContours(saliencyImage, cnt, -1, 0, 25)
-				cv2.imshow("input",  imgRgb)
-				cv2.imshow("saliencyImage",  saliencyImage)
+				# cv2.imshow("input",  imgRgb)
+				# cv2.imshow("saliencyImage",  saliencyImage)
 				return  maxVal/255, saliencyImage, [x,y,r], probabilitOfTomato
 
 			else:
 				print('All object found')
 				return 0, saliencyImage, [0,0,0], probabilitOfTomato
 		else:
-			print ('Non-tomato : ', non_tomato_number)
+			# print ('Non-tomato : ', non_tomato_number)
 			non_tomato_number +=1
 			cv2.drawContours(saliencyImage, cnt, -1, 0, -1)
 			cv2.drawContours(saliencyImage, cnt, -1, 0, 25)
@@ -132,11 +132,14 @@ def trackingSaliencyRegionBase(imgRgb,saliencyImage, minimumPropapilityTHreshold
 		return  maxVal/255, saliencyImage, [0,0,0], probabilitOfTomato
 
 def cropedRegionOfInterest(imageFullSize, targetPose, ratio_width, ratio_hieght, targetListInOneScene, extraRaduis = 0,  saveTemplate = False):
+	cropedImage = None
 	cropedImage = cropTarget(imageFullSize,targetPose[0],targetPose[1],targetPose[2], ratio_width, ratio_hieght, extraRaduis = extraRaduis)
+	# print ("cropedImageSize: ", len(cropedImage))
 	if cropedImage is not None:
 		 if cropedImage.shape[0] != 0 and cropedImage.shape[1] != 0:
 			 targetListInOneScene.append(cropedImage)
-			 cv2.imshow('cropedTarget', cropedImage)
+			 # cv2.imshow('cropedTarget', cropedImage)
+			 # cv2.waitKey(1)
 			 if saveTemplate:
 				 directoryName = 'outputData/' + str(savedImageIndex) + '.png'
 				 fileExist = os.path.isfile(directoryName)
@@ -146,3 +149,6 @@ def cropedRegionOfInterest(imageFullSize, targetPose, ratio_width, ratio_hieght,
 					 # path_ = Path(fileName)
 					 fileExist = os.path.isfile(directoryName)
 				 cv2.imwrite(directoryName,cropedImage)
+		 return cropedImage
+	else:
+		return cropedImage

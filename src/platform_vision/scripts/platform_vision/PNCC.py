@@ -29,7 +29,7 @@ class FastMatchingPyramid:
             self.matchingLine = None
 
         if self.windowname != 'Slave ':
-            cv2.namedWindow(self.windowname, cv2.WINDOW_NORMAL)
+            # cv2.namedWindow(self.windowname, cv2.WINDOW_NORMAL)
             self.terminateButton = False
 
     def my_mouse_callback(self, event,x,y,flags,param):
@@ -149,8 +149,8 @@ class FastMatchingPyramid:
         """Do fast template matching using matchTemplate plus an approximation
         through pyramid construction to improve it's performance on large images.
         """
-        if self.windowname != 'Slave ':
-            cv2.setMouseCallback(self.windowname, self.my_mouse_callback)
+        # if self.windowname != 'Slave ':
+            # cv2.setMouseCallback(self.windowname, self.my_mouse_callback)
         results = []
 
         if src_refimg.shape[2] == 1:
@@ -227,8 +227,9 @@ class FastMatchingPyramid:
                 s_img = self.template
                 dst = cv2.rectangle(dst,(0,0),(s_img.shape[0]+y_offset,s_img.shape[0]+y_offset),(0,0,255),-1)
                 dst[y_offset:y_offset+s_img.shape[0], x_offset:x_offset+s_img.shape[1]] = s_img
-                if self.windowname != 'Slave ':
-                    self.createWindows(self.windowname, dst, (900,600))
+                if self.windowname != 'Slave':
+                    # self.createWindows(self.windowname, dst, (900,600))
+                    pass
             if self.windowname != 'Slave ':
                 return centerPoint
             else :

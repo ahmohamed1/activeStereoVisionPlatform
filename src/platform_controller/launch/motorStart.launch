@@ -1,6 +1,8 @@
 <!-- -->
 <launch>
 
+
+<arg name="gui" default="1"/>
 <!-- start the arduino communication with baseline-->
 <node name="serial_node_one" pkg="rosserial_python" type="serial_node.py">
 <rosparam file="$(find platform_controller)/param/arduino1.yaml" command="load" />
@@ -30,11 +32,9 @@
 
         <node name="position_control" pkg="dynamixel_workbench_controllers" type="position_control" required="true" output="screen"/>
 
-
-<!-- start the controller node -->
-<!-- <node name="platform_controller_gui" pkg="platform_controller" type="platform_controller.py" /> -->
 <node name="control_tilt_motors" pkg="platform_controller" type="control_tilt_motors" output="screen"/>
-
-
+<!-- start the controller node -->
+<!-- <node name="platform_controller_gui" pkg="platform_controller" type="platform_controller.py" unless="$(arg gui)"  /> -->
+<node name="platform_controller_gui" pkg="platform_gui" type="platform_gui.py" unless="$(arg gui)"  />
 </launch>
 <!-- /dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AL00CJWR-if00-port0  /// arbox-->

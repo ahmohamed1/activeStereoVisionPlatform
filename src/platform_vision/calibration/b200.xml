@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<interinsic1 type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    2.7418445873636438e+03 0. 8.4731079501557815e+02 0.
+    2.7353092312385484e+03 3.4072573386343942e+02 0. 0. 1.</data></interinsic1>
+<interinsic2 type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    2.8963713349831182e+03 0. 8.9610423918353524e+02 0.
+    2.9193892259058885e+03 2.8903790021164974e+02 0. 0. 1.</data></interinsic2>
+<distCoeffs1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    -1.7907614701998020e-01 2.2274644804072459e+00
+    -1.3048247896851436e-02 -1.8138438154502320e-02
+    -5.7412726631520936e+00</data></distCoeffs1>
+<distCoeffs2 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    3.1699518449830899e-01 -6.5671545853296260e+00
+    -2.2165985222646550e-02 -1.5296249308462576e-02
+    4.2920342128226338e+01</data></distCoeffs2>
+<R type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    9.9943149232928730e-01 -1.2114000182750473e-02
+    -3.1463361867828755e-02 1.2587653479536816e-02
+    9.9980975349477819e-01 1.4899926059881306e-02 3.1276878366178491e-02
+    -1.5287505234116743e-02 9.9939384081721461e-01</data></R>
+<T type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    -1.9511484753747263e-01 1.0049570799821621e-02
+    1.2809353545808189e-01</data></T>
+<E type_id="opencv-matrix">
+  <rows>0</rows>
+  <cols>0</cols>
+  <dt>u</dt>
+  <data></data></E>
+<F type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    -5.2475320271435554e-08 -5.1958430062240815e-06
+    2.7164934980910783e-03 5.3792387874904476e-06
+    -1.8229999739839914e-07 1.6504078806460255e-02
+    -2.9713555573428877e-03 -1.8172638327196306e-02
+    9.9999999999999989e-01</data></F>
+<Error type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    1.1830047226544200e+00 1.4175028707684190e+00 2.2168394884395997e+00
+    2.9854325718349881e+00</data></Error>
+</opencv_storage>
