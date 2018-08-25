@@ -61,7 +61,7 @@ class SlaveCameraController:
             self.scaleTemplate = 0.5
         else:
             self.imageSize = np.array([2048 , 1080])
-            self.templateSize = 121
+            self.templateSize = 220
             self.thresholdMotorController = np.array([50,10])
             pyramidLevel = 7
             self.scaleTemplate = 1.0
@@ -81,7 +81,7 @@ class SlaveCameraController:
         self.mapExponatialValue = [0.3, 0.35]
         self.motorMinLimit = -75
         self.motorMaxLimit = 75
-        self.currentPos = [-5.0, -6.0]
+        self.currentPos = [0.0, 10.0]
         self.stepDistance = 0.0001
         self.motorPos = [Float64(), Float64()]
         i = 0
@@ -251,7 +251,7 @@ class SlaveCameraController:
                 if visualAttention == True:
                     if panMotorstate and tiltMotorState:
                         self.motorCountForTerminate += 1
-                        
+
                     if self.motorCountForTerminate == 15:
                         print('Target centered')
                         break

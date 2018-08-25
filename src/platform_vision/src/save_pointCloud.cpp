@@ -38,6 +38,7 @@ using namespace std;
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
+
 const string files_names [10] = {"001_0_degree" , "002_2_degree" , "003_4_degree" ,
                           "004_6_degree", "005_8_degree" , "006_10_degree" ,
                           "007_12_degree", "008_-2_degree" , "009_-4_degree" ,
