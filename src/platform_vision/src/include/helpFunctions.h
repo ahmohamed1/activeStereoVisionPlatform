@@ -1,3 +1,8 @@
+#include <iostream>
+#include <string>
+#include <tuple>
+
+using namespace std;
 cv::Mat convertROSMat2OpencvMat(const sensor_msgs::ImageConstPtr& img_msg){
   // create storage for the comming image in cv format
   cv_bridge::CvImagePtr cv_img_msg;
@@ -14,7 +19,6 @@ cv::Mat convertROSMat2OpencvMat(const sensor_msgs::ImageConstPtr& img_msg){
   }
 }
 
-#include <tuple>
 
 tuple<cv::Mat, cv::Mat, cv::Mat, cv::Mat> ExtractRGBI(cv::Mat image){
   Mat channel[3];

@@ -689,9 +689,9 @@ class ComputeDepthBasedFeature:
 
         filteredImg = cv2.normalize(src=filteredImg, dst=filteredImg, beta=0, alpha=255, norm_type=cv2.NORM_MINMAX);
         filteredImg = np.uint8(filteredImg)
-        R, G, B, I = self.SMExtractRGBI(imgl)
-        RG = self.ColourFeatureMap( R, G, B)
-        RG = np.uint8(RG)
+        # R, G, B, I = self.SMExtractRGBI(imgl)
+        # RG = self.ColourFeatureMap( R, G, B)
+        # RG = np.uint8(RG)
         # print ('imgSize', imgl.dtype )
         # print ('RG', RG.dtype )
         cv2.namedWindow('Disparity Map', cv2.WINDOW_NORMAL)
@@ -699,11 +699,11 @@ class ComputeDepthBasedFeature:
         cv2.imshow('Disparity Map', filteredImg)
         # filteredImg = cv2.bitwise_and(filteredImg, filteredImg, mask=RG)
         # cv2.imshow('imgl Map', imgl)
-        cv2.waitKey(0)
+        cv2.waitKey(1)
         # cv2.destroyAllWindows()
         return filteredImg
 
-    def generatePointCloud(self, rgb, depth, Q):
+    def generatePointCloud(self, rgb, depth):
 
         from platform_vision.pcl_helper import *
         import pcl
@@ -716,13 +716,13 @@ class ComputeDepthBasedFeature:
         XYZ_cloud = pcl.PointCloud()
         points_list = []
         scalingFactor = 1
-        focalLength = Q[2,3]
-        centerX = Q[0,3]
-        centerY = Q[1,3]
-        focalLength = Q[2,3]
+        # focalLength = Q[2,3]
+        # centerX = Q[0,3]
+        # centerY = Q[1,3]
+        # focalLength = Q[2,3]
         points = []
-        for v in range(rgb.shape[1]):
-            for u in range(rgb.shape[0]):
+        for v in range(295):
+            for u in range(295):
                 color = rgb[u,v]
                 Z = depth[u,v] / scalingFactor
                 if Z[2]==0: continue
@@ -731,22 +731,22 @@ class ComputeDepthBasedFeature:
                 points.append("%f %f %f %d %d %d 0\n"%(Z[0],Z[1],Z[2],color[0],color[1],color[2]))
                 points_list.append([Z[0],Z[1],Z[2]])
         XYZ_cloud.from_list(points_list)
-        pcl.save(XYZ_cloud, 'poitCloud.pcd')
-        file = open('ply_file.ply',"w")
-        file.write('''ply
-        format ascii 1.0
-        element vertex %d
-        property float x
-        property float y
-        property float z
-        property uchar red
-        property uchar green
-        property uchar blue
-        property uchar alpha
-        end_header
-        %s
-        '''%(len(points),"".join(points)))
-        file.close()
+        # pcl.save(XYZ_cloud, 'poitCloud.pcd')
+        # file = open('ply_file.ply',"w")
+        # file.write('''ply
+        # format ascii 1.0
+        # element vertex %d
+        # property float x
+        # property float y
+        # property float z
+        # property uchar red
+        # property uchar green
+        # property uchar blue
+        # property uchar alpha
+        # end_header
+        # %s
+        # '''%(len(points),"".join(points)))
+        # file.close()
 
 
     # http://bytes.com/topic/python/answers/486627-anaglyph-3d-stereo-imaging-pil-numpy
@@ -812,8 +812,6 @@ class ComputeDepthBasedFeature:
     # ============
 
     def mainLoop(self,imgL,imgR):
-        # imgL = cv2.imread('/home/abdulla/dev/Data/1left.jpg', 1)
-        # imgR = cv2.imread('/home/abdulla/dev/Data/1right.jpg', 1)
 
         # Initiate SURF detector
         surf_threshold = 6000
@@ -857,80 +855,27 @@ class ComputeDepthBasedFeature:
         rimg1, rimg2, Q = self.rectifyWrapper(imgL, imgR, lines1, lines2, pts1, pts2, F)
 
         # Overlay (align, register) the images
-        overlayIN = cv2.addWeighted(imgL, 0.5, imgR, 0.5, 0)
-        overlayRect = cv2.addWeighted(rimg1, 0.5, rimg2, 0.5, 0)
+        # overlayIN = cv2.addWeighted(imgL, 0.5, imgR, 0.5, 0)
+        # overlayRect = cv2.addWeighted(rimg1, 0.5, rimg2, 0.5, 0)
         #
         # # Register & Warp
-        tr_img2 = self.registerImages(pts1, pts2, rimg1[:,:,0:3], rimg2[:,:,0:3])
+        # tr_img2 = self.registerImages(pts1, pts2, rimg1[:,:,0:3], rimg2[:,:,0:3])
 
         # Compute disparity map
         # disparityMap(rimg1, rimg2)
         # disparityMapSGM(rimg1, rimg2)
         disp = self.postfilterDisparity(rimg1, rimg2)
 
-        # pointCloud = cv2.reprojectImageTo3D(disp, Q, ddepth=cv2.CV_32F)
-        # # print ('pointCloud shape: ', pointCloud.shape)
-        # cv2.imshow('PointCloud', pointCloud)
-        cv2.waitKey(0)
-        # self.generatePointCloud(rimg1, pointCloud, Q)
+        pointCloud = cv2.reprojectImageTo3D(disp, Q, ddepth=cv2.CV_32F)
+        w = pointCloud.shape[0]
+        h = pointCloud.shape[1]
+        center = 150
+        pointCloud = pointCloud[w/2-center:w/2+center, h/2-center:h/2+center]
+        # print ('pointCloud shape: ', pointCloud.shape)
+        cv2.imshow('PointCloud', pointCloud)
+        cv2.waitKey(1)
+        self.generatePointCloud(rimg1, pointCloud)
 
-
-def loadPointCloudAndShow():
-    import pcl
-    cloud = pcl.loadPLYFile('ply_file.ply')
-
-    pcl.save(cloud, 'pointCloud.pcd')
-    # # Voxel Grid filter
-    # vox = cloud.make_voxel_grid_filter()
-    #
-    # LEAF_SIZE = 1
-    # vox.set_leaf_size(LEAF_SIZE, LEAF_SIZE, LEAF_SIZE)
-    #
-    # cloud_filtered = vox.filter()
-    #
-    # # PassThrough filter
-    # passthrough = cloud_filtered.make_passthrough_filter()
-    #
-    # #Assign axis and range to the passthrough filter object
-    # filter_axis = 'z'
-    # passthrough.set_filter_field_name(filter_axis)
-    # axis_min = 0.6
-    # axis_max = 1.1
-    #
-    # passthrough.set_filter_limits(axis_min, axis_max)
-    #
-    # #Finally user the filter function to obtain the resultant point cloud
-    # cloud_filtered = passthrough.filter()
-    # filename = 'pass_through_filtered.pcd'
-    #
-    #
-    # # RANSAC plane segmentation
-    #  # create the segmentation object
-    # seg = cloud_filtered.make_segmenter()
-    #
-    #  #Set the model
-    # seg.set_model_type(pcl.SACMODEL_PLANE)
-    # seg.set_model_type(pcl.SAC_RANSAC)
-    #
-    # max_distance = 0.01
-    # seg.set_distance_threshold(max_distance)
-    #
-    # inliers, coefficients = seg.segment()
-    # extract_inliers = cloud_filtered.extract(inliers, negative=False)
-    # filename = 'extracted_inliers.pcd'
-    #
-    # extract_outliers = cloud_filtered.extract(inliers, negative=True)
-    # filename = 'extracted_outliers.pcd'
-    #
-    #
-    # outlier_filter = cloud_filtered.make_statistical_outlier_filter()
-    # outlier_filter.set_mean_k(50)
-    #
-    # x = 1.0
-    # outlier_filter.set_std_dev_mul_thresh(x)
-    # cloud_filtered = outlier_filter.filter()
-    #
-    # pcl.save(extract_outliers, filename)
 
 def main():
     rospy.init_node('computeDepthBasedFeature', anonymous = False)

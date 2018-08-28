@@ -56,7 +56,7 @@ int main(int argc,char** argv)
 
   cv::namedWindow("slave image", cv::WINDOW_NORMAL);
   cv::resizeWindow("slave image", 900, 600);
-  
+
   int windowSize = 250;
   int algorithm = 1;
   if (argc > 1){
@@ -93,7 +93,7 @@ int main(int argc,char** argv)
   while(nh.ok()){
     ros::spinOnce();
     char ikey;
-    ikey = cv::waitKey('q');
+    ikey = cv::waitKey(1);
     right_img = rightImageSubClass.getImage();
     left_img = leftImageSubClass.getImage();
 
@@ -114,7 +114,7 @@ int main(int argc,char** argv)
       line(right_img, cv::Point((right_img.cols/2)-lineSize, right_img.rows/2), cv::Point((right_img.cols/2)+lineSize, right_img.rows/2), cv::Scalar(0,0,255), 2);  //crosshair horizontal
       line(right_img, cv::Point(right_img.cols/2, (right_img.rows/2)-lineSize), cv::Point(right_img.cols/2, (right_img.rows/2)+lineSize), cv::Scalar(0,0,255), 2);  //crosshair vertical
       cv::imshow("slave image", right_img);
-      cv::waitKey(10);
+      cv::waitKey(1);
       if (!state){
         break;
       }

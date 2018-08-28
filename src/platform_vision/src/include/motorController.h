@@ -11,8 +11,8 @@ public:
 
     exponatialGain[0] = 0.003;
     exponatialGain[1]= 0.0035; // pan, tilt
-    mapExponatialValue[0] = 0.2;
-    mapExponatialValue[1]= 0.35;
+    mapExponatialValue[0] = 0.09; //0.2;
+    mapExponatialValue[1]= 0.1; //0.35;
     thresholdMotorController[0] = 80;
     thresholdMotorController[1] = 12;
     motorMaxLimit = 75;
@@ -49,7 +49,19 @@ public:
     return 0;
   }
 
+  void moveMotorWithoutExponanetial(float value){
+    float speed = value;
+    currentPosition[0] += speed;
+    motorPos[0].data = currentPosition[0];
+    std::cout << "Motor Pan Speed: " << currentPosition[0] << std::endl;
+    if (currentPosition[0] < motorMaxLimit and currentPosition[0] > motorMinLimit){
+      motorPanPublisher.publish(motorPos[0]);
+    }
+  }
+
+
   void movePanMotor(float value){
+    value = -value;
     float speed = 0;
     speed = signnum(-value) * exp(abs(value)* exponatialGain[0])*mapExponatialValue[0];
     if (abs(value) > thresholdMotorController[0]){
@@ -73,6 +85,7 @@ public:
   }
 
   void moveTiltMotor(float value){
+    value = -value;
     float speed = 0;
     speed = signnum(-value) * exp(abs(value)* exponatialGain[1])*mapExponatialValue[1];
     if (abs(value) > thresholdMotorController[1]){
