@@ -265,7 +265,7 @@ int main(int argc,char** argv)
             // Display the disparity map
             cv::namedWindow("Disparity Map",cv::WINDOW_AUTOSIZE);
             cv::imshow("Disparity Map", disparity);
-            char ikey = waitKey('q');
+            char ikey = waitKey(1);
             if(ikey =='q'){
                 break;
             }

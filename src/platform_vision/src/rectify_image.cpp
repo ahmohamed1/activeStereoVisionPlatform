@@ -408,25 +408,25 @@ int main(int argc,char** argv)
 
            disp = disp(New_window_size);
            undisFrame1 = undisFrame1(New_window_size);
-           Mat processPointCloud;
-           Mat RG, BY;
-           tie (RG, BY) = BGRColorOppenetProcess(undisFrame1);
-           // cout << disp.size() << "  " << RG.size() <<endl;
-           Mat dispMask;
-           cv::bitwise_and(disp, disp, dispMask, RG);
+           // Mat processPointCloud;
+           // Mat RG, BY;
+           // tie (RG, BY) = BGRColorOppenetProcess(undisFrame1);
+           // // cout << disp.size() << "  " << RG.size() <<endl;
+           // Mat dispMask;
+           // cv::bitwise_and(disp, disp, dispMask, RG);
            // cout << "333333"<<endl;
            // threshold(disp, disp,depth_threshold_threshold, 255, 3 );
            /////////////////////////////////////////////////
            // Find the measurement
            Mat pointCloud;
            // drawBourderAroundObject(undisFrame1, &disp);
-          reprojectImageTo3D(dispMask, pointCloud, Q, true, CV_32F);
+          reprojectImageTo3D(disp, pointCloud, Q, true, CV_32F);
 
 
 
           // cout << "44444"<<endl;
           //Calculate the point cloud
-           pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud =  disparityClass.MatToPoinXYZ(dispMask, pointCloud, undisFrame1);
+           pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud =  disparityClass.MatToPoinXYZ(disp, pointCloud, undisFrame1);
           if (mouseMove == true){
            // This just to find the object
            Mat cropedDisparity = disp(selectedRectangle);

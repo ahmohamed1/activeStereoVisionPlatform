@@ -839,6 +839,7 @@ class ComputeDepthBasedFeature:
         #cv2.FM_LMEDS
         #cv2.FM_8POINT
         #cv2.FM_LMEDS
+
         F, mask = cv2.findFundamentalMat(pts1,pts2,cv2.FM_LMEDS)
 
         # print('F size: ', F.shape)

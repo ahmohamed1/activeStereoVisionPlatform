@@ -3,6 +3,16 @@
 #include <tuple>
 
 using namespace std;
+
+cv::Mat drawCross(cv::Mat image, int lineSize = 30){
+  cv::Mat copyImage = image.clone();
+  line(copyImage, cv::Point((image.cols/2)-lineSize, image.rows/2), cv::Point((image.cols/2)+lineSize, image.rows/2), cv::Scalar(0,0,255), 2);  //crosshair horizontal
+  line(copyImage, cv::Point(image.cols/2, (image.rows/2)-lineSize), cv::Point(image.cols/2, (image.rows/2)+lineSize), cv::Scalar(0,0,255), 2);  //crosshair vertical
+
+  return copyImage;
+}
+
+
 cv::Mat convertROSMat2OpencvMat(const sensor_msgs::ImageConstPtr& img_msg){
   // create storage for the comming image in cv format
   cv_bridge::CvImagePtr cv_img_msg;

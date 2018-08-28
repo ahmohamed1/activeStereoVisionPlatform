@@ -248,10 +248,6 @@ target_link_libraries(match_stereo ${OpenCV_LIBS} ${catkin_LIBRARIES})
 add_executable(calibration src/calibration.cpp)
 target_link_libraries(calibration ${OpenCV_LIBS} ${catkin_LIBRARIES})
 
-add_executable(rectify_img_bouguet src/rectify_img_bouguet.cpp)
-target_link_libraries(rectify_img_bouguet ${OpenCV_LIBS} ${catkin_LIBRARIES})
-
-
 add_executable(track_marker src/track_marker.cpp)
 target_link_libraries(track_marker ${OpenCV_LIBS} ${catkin_LIBRARIES})
 
@@ -263,12 +259,8 @@ add_executable(cross_corrolation_pyramid src/cross_corrolation_pyramid.cpp)
 target_link_libraries(cross_corrolation_pyramid ${OpenCV_LIBS} ${catkin_LIBRARIES})
 
 
-
 add_executable(collect_data src/collect_data.cpp)
 target_link_libraries(collect_data ${OpenCV_LIBS} ${catkin_LIBRARIES})
-
-add_executable(disparity_node src/disparity_node.cpp)
-target_link_libraries(disparity_node ${OpenCV_LIBS} ${catkin_LIBRARIES})
 
 add_executable(platform_rectify_node src/platform_rectify_node.cpp)
 target_link_libraries(platform_rectify_node ${OpenCV_LIBS} ${catkin_LIBRARIES})
@@ -284,3 +276,10 @@ target_link_libraries(structureFromMotion ${OpenCV_LIBS} ${catkin_LIBRARIES})
 
 add_executable(featureBasedMatchingCuda src/featureBasedMatchingCuda.cpp)
 target_link_libraries(featureBasedMatchingCuda ${OpenCV_LIBS} ${catkin_LIBRARIES})
+
+#add_library(FastMatchTemplate include/FastMatchTemplate.h)
+add_executable(fastTemplateMtching src/fastTemplateMtching.cpp)
+target_link_libraries(fastTemplateMtching ${OpenCV_LIBS} ${catkin_LIBRARIES})
+
+add_executable(gazeController src/gazeController.cpp)
+target_link_libraries(gazeController ${OpenCV_LIBS} ${catkin_LIBRARIES})
