@@ -281,5 +281,8 @@ target_link_libraries(featureBasedMatchingCuda ${OpenCV_LIBS} ${catkin_LIBRARIES
 add_executable(fastTemplateMtching src/fastTemplateMtching.cpp)
 target_link_libraries(fastTemplateMtching ${OpenCV_LIBS} ${catkin_LIBRARIES})
 
-add_executable(gazeController src/gazeController.cpp)
-target_link_libraries(gazeController ${OpenCV_LIBS} ${catkin_LIBRARIES})
+add_executable(gazeControllerPNCC src/gazeControllerPNCC.cpp)
+target_link_libraries(gazeControllerPNCC ${OpenCV_LIBS} ${catkin_LIBRARIES})
+
+add_executable(gazeControllerObjectTracking src/gazeControllerObjectTracking.cpp)
+target_link_libraries(gazeControllerObjectTracking ${OpenCV_LIBS} ${catkin_LIBRARIES})

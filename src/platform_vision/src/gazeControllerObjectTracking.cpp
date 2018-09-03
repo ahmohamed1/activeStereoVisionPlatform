@@ -30,10 +30,7 @@ using namespace std;
 ( std::ostringstream() << std::dec << x ) ).str()
 Size imageSize = Size(2048 , 1080);//Size(4096,2160);
 Point2f windowsCenter(imageSize.width/2, imageSize.height/2);
-// windowsCenter.x = imageSize.width/2;
-// windowsCenter.y = imageSize.height/2;
 bool updateTracker = false;
-
 void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 {
     if  ( event == EVENT_LBUTTONDOWN )
@@ -52,7 +49,7 @@ Mat left_img, right_img;
 int main(int argc, char **argv)
 {
 
-
+  
   ros::init(argc,argv,"GazeController");
   string windowsNameString = "MasterCamera";
   ros::NodeHandle nh;
@@ -115,6 +112,7 @@ int main(int argc, char **argv)
   tracker->init(frame, bbox);
   //set the callback function for any mouse event
   setMouseCallback(windowsNameString, CallBackFunc, NULL);
+  cv::Point2f difference;
   while(nh.ok()){
       ros::spinOnce();
       char ikey;
@@ -145,8 +143,8 @@ int main(int argc, char **argv)
           {
               // Tracking success : Draw the tracked object
               rectangle(frame, bbox, Scalar( 255, 0, 0 ), 2, 1 );
-              Point center_of_rect = (bbox.br() + bbox.tl())*0.5;
-              circle(frame,center_of_rect,3,Scalar(0,0,255));
+              difference = (bbox.br() + bbox.tl())*0.5;
+              circle(frame, difference, 3, Scalar(0,0,255));
           }
           else
           {
@@ -159,6 +157,11 @@ int main(int argc, char **argv)
           putText(frame, "FPS : " + SSTR(int(fps)), Point(100,50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50,170,50), 2);
         }
         // Display frame.
+
+        bool panState = motorController.movePanMotor(difference.x); // 0 to move the pan motor
+        bool tiltState = motorController.moveTiltMotor(difference.y); // 1 to move the tilt motor
+        motorController.checkVergeCorrectely(panState,tiltState);
+
         imshow(windowsNameString, frame);
 
         // Exit if ESC pressed.

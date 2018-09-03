@@ -93,6 +93,32 @@ cv::Rect returnRectanguleSizeOfCenterImage(cv::Size imageSize, int windowSize){
   return windowSizeRectangule;
 }
 
+cv::Rect returnRectanguleTemplate(cv::Point2f center, int windowSize,cv::Size imageSize){
+  int x1 = center.x - windowSize/2;
+  int y1 = center.y - windowSize/2;
+  int x2 = center.x + windowSize/2;
+  int y2 = center.y + windowSize/2;
+
+  if(x1 < 0){
+    x1 = 0;
+    x2 = windowSize;
+  }
+  if(x2 > imageSize.width){
+    x2 = imageSize.width;
+    x1 = imageSize.width - windowSize;
+  }
+  if(y1 < 0){
+    y1 = 0;
+    y2 = windowSize;
+  }
+  if(y2 > imageSize.height){
+    y2 = imageSize.height;
+    y1 = imageSize.height - windowSize;
+  }
+
+Rect2d bbox(x1, y1, windowSize, windowSize);
+return bbox;
+}
 /////////////////////////////////////////////////////////////////////
 /////These variables for selecting the regoin
 bool mouseMove = false;
