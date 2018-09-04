@@ -22,10 +22,10 @@
 #include <pcl/visualization/cloud_viewer.h>
 #include <sensor_msgs/PointCloud2.h>
 
-#include "robustMatcher.h"
-
 using namespace cv;
 using namespace std;
+
+#include "include/helpFunctions.h"
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
@@ -33,46 +33,6 @@ using namespace std;
 // global virable
 Mat left_img, right_img;
 Size sizee = Size(2048 , 1080);
-
-// the blow functions are the function use to get the values
-void left_img_callback(const sensor_msgs::ImageConstPtr& img_msg){
-
-    // create storage for the comming image in cv format
-    cv_bridge::CvImagePtr cv_img_msg;
-
-    //copy the image and save it in opencv formate
-    try{
-    cv_img_msg = cv_bridge::toCvCopy(img_msg,sensor_msgs::image_encodings::BGR8);
-    }
-    catch(cv_bridge::Exception e)
-    {
-        ROS_ERROR("cv_bridge expection: %s", e.what());
-        return;
-    }
-
-    // left_img =  equalize_image_using_histograme(cv_img_msg->image);
-    left_img =  cv_img_msg->image;
-}
-
-void right_img_callback(const sensor_msgs::ImageConstPtr& img_msg){
-
-    // create storage for the comming image in cv format
-    cv_bridge::CvImagePtr cv_img_msg;
-
-    //copy the image and save it in opencv formate
-    try{
-    cv_img_msg = cv_bridge::toCvCopy(img_msg,sensor_msgs::image_encodings::BGR8);
-    }
-    catch(cv_bridge::Exception e)
-    {
-        ROS_ERROR("cv_bridge expection: %s", e.what());
-        return;
-    }
-
-    // right_img =  equalize_image_using_histograme(cv_img_msg->image);
-    right_img =  cv_img_msg->image;
-}
-
 
 /**
  * Structure from motion from 2 cameras, using farneback optical flow as the 'features'
@@ -89,7 +49,13 @@ Mat sfm( Mat& img1, Mat& img2 , Mat cam_matrix[2], Mat dist_coeff[2] ) {
         Smaller window size param, means more ambiguity when calculating the flow.
      */
     Mat flow_mat;
-    calcOpticalFlowFarneback( gray1, gray2, flow_mat, 0.5, 3, 12, 3, 5, 1.2, 0 );
+    /*calcOpticalFlowPyrLK(InputArray prevImg, InputArray nextImg, InputArray prevPts,
+                           InputOutputArray nextPts, OutputArray status, OutputArray err,
+                           Size winSize=Size(21,21), int maxLevel=3,
+                           TermCriteria criteria=TermCriteria(TermCriteria::COUNT+TermCriteria::EPS, 30, 0.01),
+                           int flags=0, double minEigThreshold=1e-4 )
+    */
+    calcOpticalFlowFarneback(gray1, gray2, flow_mat, 0.5, 3, 12, 3, 5, 1.2, 0 );
 
     vector<Point2f> left_points, right_points;
     for ( int y = 0; y < img1.rows; y+=6 ) {
@@ -169,9 +135,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr MatToPoinXYZ(Mat xyz)
    pcl::PointXYZ point;
    for (int i = 0; i < xyz.rows; ++i)
        {
-
            double* xyz_ptr = xyz.ptr<double>(i);
-
            for (int j = 0; j < xyz.cols; ++j)
            {
 
@@ -196,8 +160,10 @@ int main(int argc,char** argv){
   ros::init(argc,argv,"SFM");
   ros::NodeHandle nh;
   //define the subscriber and publisher
-  ros::Subscriber left_img_sub = nh.subscribe("/stereo/left/image_raw",10,left_img_callback);
-  ros::Subscriber right_img_sub = nh.subscribe("/stereo/right/image_raw",10,right_img_callback);
+  //define the subscriber and publisher
+  GetImageClass rightImageSubClass(nh, "right");
+  GetImageClass leftImageSubClass(nh, "left");
+
   ros::Publisher pointCloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/pcl_output",1);
   pcl::visualization::CloudViewer viewer ("Simple Cloud Viewer");
 
@@ -206,7 +172,7 @@ int main(int argc,char** argv){
   Mat cam_matrix[2];
   Mat dist_coeff[2];
   //Load the calibraton date from the raw dat
-  string filename = "/home/abdulla/dev/Active-stereo-Vision-Platform/calibration_data/003_used_data.xml";
+  string filename = "/home/abdulla/dev/activeStereoVisionPlatform/src/platform_vision/calibration/003_used_data.xml";
   FileStorage fr(filename, FileStorage::READ);
   fr["interinsic1"] >> cam_matrix[0];
   fr["interinsic2"] >> cam_matrix[1];
@@ -216,9 +182,11 @@ int main(int argc,char** argv){
 
   while(nh.ok()){
     ros::spinOnce();
+    right_img = rightImageSubClass.getImage();
+    left_img = leftImageSubClass.getImage();
     if(!left_img.empty() && !right_img.empty()){
       // Process Image
-      Mat pointCloudMat = sfm( left_img, right_img , cam_matrix, dist_coeff );
+      Mat pointCloudMat = sfm( left_img, right_img , cam_matrix, dist_coeff);
       pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud =  MatToPoinXYZ(pointCloudMat);
       viewer.showCloud(pointcloud);
       sensor_msgs::PointCloud2 output;
@@ -228,166 +196,6 @@ int main(int argc,char** argv){
       pointCloud_pub.publish(output);
     }
   }
+
+  return 0;
 }
-
-
-// int main(int argc,char** argv){
-//   ros::init(argc,argv,"SFM");
-//   ros::NodeHandle nh;
-//   //define the subscriber and publisher
-//   ros::Subscriber left_img_sub = nh.subscribe("/stereo/left/image_raw",10,left_img_callback);
-//   ros::Subscriber right_img_sub = nh.subscribe("/stereo/right/image_raw",10,right_img_callback);
-//   ros::Publisher pointCloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/pcl_output",1);
-//   pcl::visualization::CloudViewer viewer ("Simple Cloud Viewer");
-//
-//   while(ros::ok()){
-//     ros::spinOnce();
-//     // Read input images
-//     if(!left_img.empty() && !right_img.empty()){
-//   cv::Mat image1= left_img;
-//   cv::Mat image2= right_img;
-// //    cv::Mat image =stf(image1,image1, true);
-//   cv::waitKey(0);
-//   cv::resize(image1,image1,cv::Size(800,600));
-//   cv::resize(image2,image2,cv::Size(800,600));
-//   cv::namedWindow("Matches",cv::WINDOW_OPENGL);
-//   cv::imshow("Matches", image1);
-//
-//   // Prepare the matcher (with default parameters)
-//   // here SIFT detector and descriptor
-//   RobustMatcher rmatcher(cv::xfeatures2d::SIFT::create(250));
-//
-//
-//   // Match the two images
-//   std::vector<cv::DMatch> matches;
-//
-//   std::vector<cv::KeyPoint> keypoints1, keypoints2;
-//   cv::Mat fundamental = rmatcher.match(image1, image2, matches,
-//       keypoints1, keypoints2);
-//
-//   // draw the matches
-//   cv::Mat imageMatches;
-//   cv::drawMatches(image1, keypoints1,  // 1st image and its keypoints
-//       image2, keypoints2,  // 2nd image and its keypoints
-//       matches,			// the matches
-//       imageMatches,		// the image produced
-//       cv::Scalar(255, 255, 255),  // color of the lines
-//       cv::Scalar(255, 255, 255),  // color of the keypoints
-//       std::vector<char>(),
-//       2);
-//    cv::namedWindow("Matches",cv::WINDOW_OPENGL);
-//    cv::imshow("Matches", imageMatches);
-//
-//   // Convert keypoints into Point2f
-//   std::vector<cv::Point2f> points1, points2;
-//
-//   for (std::vector<cv::DMatch>::const_iterator it = matches.begin();
-//   it != matches.end(); ++it) {
-//
-//       // Get the position of left keypoints
-//       float x = keypoints1[it->queryIdx].pt.x;
-//       float y = keypoints1[it->queryIdx].pt.y;
-//       points1.push_back(keypoints1[it->queryIdx].pt);
-//       // Get the position of right keypoints
-//       x = keypoints2[it->trainIdx].pt.x;
-//       y = keypoints2[it->trainIdx].pt.y;
-//       points2.push_back(keypoints2[it->trainIdx].pt);
-//   }
-//
-//   // Compute homographic rectification
-//   cv::Mat h1, h2;
-//   cv::stereoRectifyUncalibrated(points1, points2, fundamental, image1.size(), h1, h2);
-//
-//   // Rectify the images through warping
-//   cv::Mat rectified1;
-//   cv::warpPerspective(image1, rectified1, h1, image1.size());
-//   cv::Mat rectified2;
-//   cv::warpPerspective(image2, rectified2, h2, image1.size());
-//   // Display the images
-// //    cv::namedWindow("Left Rectified Image",cv::WINDOW_OPENGL);
-// //    cv::imshow("Left Rectified Image", rectified1);
-// //    cv::namedWindow("Right Rectified Image",cv::WINDOW_OPENGL);
-// //    cv::imshow("Right Rectified Image", rectified2);
-//
-//   points1.clear();
-//   points2.clear();
-//   for (int i = 20; i < image1.rows - 20; i += 20) {
-//
-//       points1.push_back(cv::Point(image1.cols / 2, i));
-//       points2.push_back(cv::Point(image2.cols / 2, i));
-//   }
-//
-//   // Draw the epipolar lines
-//   std::vector<cv::Vec3f> lines1;
-//   cv::computeCorrespondEpilines(points1, 1, fundamental, lines1);
-//
-//   for (std::vector<cv::Vec3f>::const_iterator it = lines1.begin();
-//   it != lines1.end(); ++it) {
-//
-//       cv::line(image2, cv::Point(0, -(*it)[2] / (*it)[1]),
-//           cv::Point(image2.cols, -((*it)[2] + (*it)[0] * image2.cols) / (*it)[1]),
-//           cv::Scalar(255, 255, 255));
-//   }
-//
-//   std::vector<cv::Vec3f> lines2;
-//   cv::computeCorrespondEpilines(points2, 2, fundamental, lines2);
-//
-//   for (std::vector<cv::Vec3f>::const_iterator it = lines2.begin();
-//   it != lines2.end(); ++it) {
-//
-//       cv::line(image1, cv::Point(0, -(*it)[2] / (*it)[1]),
-//           cv::Point(image1.cols, -((*it)[2] + (*it)[0] * image1.cols) / (*it)[1]),
-//           cv::Scalar(255, 255, 255));
-//   }
-//
-//   // Display the images with epipolar lines
-// //    cv::namedWindow("Left Epilines",cv::WINDOW_OPENGL);
-// //    cv::imshow("Left Epilines", image1);
-// //    cv::namedWindow("Right Epilines",cv::WINDOW_OPENGL);
-// //    cv::imshow("Right Epilines", image2);
-//
-//   // draw the pair
-//   cv::drawMatches(image1, keypoints1,  // 1st image
-//       image2, keypoints2,              // 2nd image
-//       std::vector<cv::DMatch>(),
-//       imageMatches,		             // the image produced
-//       cv::Scalar(255, 255, 255),
-//       cv::Scalar(255, 255, 255),
-//       std::vector<char>(),
-//       2);
-//    cv::namedWindow("A Stereo pair",cv::WINDOW_OPENGL);
-//    cv::imshow("A Stereo pair", imageMatches);
-//
-//   // Compute disparity
-//   cv::Mat disparity;
-//   cv::Ptr<cv::StereoMatcher> pStereo = cv::StereoSGBM::create(0,   // minimum disparity
-//                                                               128,  // maximum disparity
-//                                                               11);  // block size
-//   pStereo->compute(rectified1, rectified2, disparity);
-//
-//   // draw the rectified pair
-//
-//   cv::warpPerspective(image1, rectified1, h1, image1.size());
-//   cv::warpPerspective(image2, rectified2, h2, image1.size());
-//   cv::drawMatches(rectified1, keypoints1,  // 1st image
-//       rectified2, keypoints2,              // 2nd image
-//       std::vector<cv::DMatch>(),
-//       imageMatches,		                // the image produced
-//       cv::Scalar(255, 255, 255),
-//       cv::Scalar(255, 255, 255),
-//       std::vector<char>(),
-//       2);
-//    cv::namedWindow("Rectified Stereo pair");
-//    cv::imshow("Rectified Stereo pair", imageMatches);
-//
-//
-//   double minv, maxv;
-//   disparity = disparity * 64;
-//   cv::minMaxLoc(disparity, &minv, &maxv);
-//   std::cout << minv << "+" << maxv << std::endl;
-//   // Display the disparity map
-//   cv::namedWindow("Disparity Map",cv::WINDOW_OPENGL);
-//   cv::imshow("Disparity Map", disparity);
-//     }
-//   }
-// }

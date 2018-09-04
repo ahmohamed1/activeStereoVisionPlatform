@@ -37,7 +37,7 @@ class SlaveCameraController:
         self.templateSizeSub = rospy.Subscriber('/templateSize', Int64, self.templateSizeCallBack)
         self.bridge = CvBridge()
 
-        self.OnTargetPublisher = rospy.Publisher('/onTarget', Bool, queue_size=1)
+        self.OnTargetPublisher = rospy.Publisher('/right/onTarget', Bool, queue_size=1)
 
         self.fileExcite = False
         self.activeTilitController = activeTilitController
@@ -222,7 +222,7 @@ class SlaveCameraController:
             cv2.imshow('Slave Camera', _img)
         return centerPoint
 
-    
+
     def trackObject(self, visualAttention = False):
         if visualAttention:
             self.motorCountForTerminate =0;

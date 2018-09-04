@@ -306,7 +306,7 @@ public:
 
     //=============================================================================
 
-    void DrawFoundTargets(Mat*                  image,
+    cv::Rect DrawFoundTargets(Mat*                  image,
                          const cv::Size&           size,
                          const vector<cv::Point>&  pointsList,
                          const vector<double>& confidencesList,
@@ -314,6 +314,7 @@ public:
                          int                   green = 255,
                          int                   blue = 0)
     {
+        cv::Rect rectTemp(0,0,1,1);
         int numPoints = pointsList.size();
         for(int currPoint = 0; currPoint < numPoints; currPoint++)
         {
@@ -337,18 +338,22 @@ public:
             bottomRight.x = point.x + size.width / 2;
             bottomRight.y = point.y + size.height / 2;
 
+            rectTemp = cv::Rect(topLeft, bottomRight);
             rectangle(*image, topLeft, bottomRight, CV_RGB(red, green, blue),2);
         }
+
+        return rectTemp;
     }
 
     //=============================================================================
-    std::tuple<cv::Mat, cv::Point2f> trackTargetPNCC(cv::Mat source, cv::Mat temp,
+    std::tuple<cv::Mat, cv::Point2f, cv::Rect> trackTargetPNCC(cv::Mat source, cv::Mat temp,
                                                      int matchPercentage = 90,
                                                      bool findMultipleTargets = false,
                                                      int numMaxima = 2,
                                                      int numDownPyrs = 3,
                                                      int searchExpansion = 15){
       //Step 1 - Resize the images and and convert them to gray
+      cv::Rect rect;
       vector<Point> foundPointsList;
       vector<double> confidencesList;
       Point2f center_img = Point2f(source.cols/2, source.rows/2);
@@ -367,7 +372,7 @@ public:
       {
     //      ROS_ERROR("\nERROR: Fast match template failed.\n");
           cv::Point2f temp(0,0);
-          return std::make_tuple(source, temp);
+          return std::make_tuple(source, temp, rect);
       }
 
       Mat colorImage;
@@ -383,17 +388,16 @@ public:
       }
 
       // cout << "Points detected: " << foundPointsList.size() <<endl;
-      FastTemplateMatch::DrawFoundTargets(&colorImage,
+      rect = FastTemplateMatch::DrawFoundTargets(&colorImage,
                        temp.size(),
                        foundPointsList,
                        confidencesList,
                         0, 255, 0);
 
       // wait for both windows to be closed before releasing images
-    //  colorImage = drawCross(colorImage);
       cv::rectangle(colorImage,cv::Point(0,0),cv::Point(temp.cols+20, temp.rows+20), cv::Scalar(0,0,255), -1);
       temp.copyTo(colorImage(cv::Rect(0,0,temp.cols, temp.rows)));
-      // Step 6 - Move the motor Using the PID Controller by implementing the P controll
+      // Step 6 - Move the motor Using Exponantial controller
       //Get the points if the templets
       Point2f temp_pos = center_img;
       if(foundPointsList.size() != 0){
@@ -403,7 +407,7 @@ public:
       ///calculate the differences between the templete pos and the center of image
       /// first check if there is any object in the image to move
       cv::Point2f difference = center_img - temp_pos;
-      return std::make_tuple(colorImage, difference);
+      return std::make_tuple(colorImage, difference, rect);
     }
     //=============================================================================
 

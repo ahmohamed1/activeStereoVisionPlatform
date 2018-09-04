@@ -24,8 +24,7 @@ Mat left_img, right_img;
 //Size sizee = Size(640,420);
 Size sizee = Size(2048,1080);
 
-float left_pan = 0,right_pan = 0;
-float baseline_value = 0.0;
+
 Size imageSize = Size(2048 , 1080);//Size(4096,2160);
 Point2f windowsCenter(imageSize.width/2, imageSize.height/2);
 bool updateTracker = false;
@@ -83,7 +82,8 @@ int main(int argc,char** argv)
             cv::Point2f difference;
             cv::Mat editedImage;
             // cout<<left_img.size() <<endl;
-            tie(editedImage, difference) = gazeFastMatchTemplate.trackTargetPNCC(left_img, temp, 85);
+            cv::Rect _tempRect;
+            tie(editedImage, difference, _tempRect) = gazeFastMatchTemplate.trackTargetPNCC(left_img, temp, 85);
             imshow(windowsNameString, editedImage);
 
             // std::cout<< "Difference: " << difference << endl;

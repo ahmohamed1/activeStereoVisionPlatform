@@ -70,6 +70,10 @@ public:
     string imageNameTopic = "/stereo/"+ ImageName + "/image_raw"; // "/image_mono";
     img_sub = nh.subscribe(imageNameTopic,10, &GetImageClass::img_callback, this);
   }
+
+  GetImageClass(){
+    
+  }
   void img_callback(const sensor_msgs::ImageConstPtr& img_msg){
       image =  convertROSMat2OpencvMat(img_msg);
   }

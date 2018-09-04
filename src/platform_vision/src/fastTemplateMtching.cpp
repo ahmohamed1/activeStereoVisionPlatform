@@ -19,6 +19,7 @@ using namespace std;
 #include "include/motorController.h"
 #include "include/helpFunctions.h"
 #include "include/FastMatchTemplate.h"
+
 // global virable
 Mat left_img, right_img;
 
@@ -27,14 +28,28 @@ float baseline_value = 0.0;
 Size imageSize = Size(2048 , 1080);//Size(4096,2160);
 
 
-
 int main(int argc,char** argv)
 {
-    FastTemplateMatch vergFastMatchTemplate;
+
+    int windowSize = 200;
+    if (argc > 1){
+      istringstream ss(argv[1]);
+      if (!(ss >> windowSize)){
+        std::cout << "No argument \n";
+      }else{
+        std::cout << "windowSize " << windowSize << '\n';
+      }
+    }else{
+      std::cout << "No Argument "<< '\n';
+    }
+
     ros::init(argc,argv,"VergenceController");
-    string windowsNameString = "SlaveCamera";
     ros::NodeHandle nh;
-    int windowSize = 250;
+
+
+    FastTemplateMatch vergFastMatchTemplate;
+    string windowsNameString = "SlaveCamera";
+
     //define the subscriber and publisher
     GetImageClass rightImageSubClass(nh, "right");
     GetImageClass leftImageSubClass(nh, "left");
@@ -42,16 +57,15 @@ int main(int argc,char** argv)
     //Define the publisher
     MotorController motorController(nh, "right");
     motorController.moveToZero();
-    Mat temp;
-    int rectSize = 200; // this int describe the size of the templet multiply by 2
-    Point2f center_img = Point(imageSize.width/2, imageSize.height/2);
-    Rect ROI = Rect(imageSize.width/2 - (rectSize/2), imageSize.height/2 - (rectSize/2), rectSize, rectSize);
+
+    // motorController.tiltGoto(10.0);
+
 
 
     namedWindow(windowsNameString, WINDOW_NORMAL);
     resizeWindow(windowsNameString,640,480);
     cv::moveWindow(windowsNameString, 1000,600);
-    ros::Rate r(20); // 10 hz
+    ros::Rate r(15); // 10 hz
     // start the while loop
     while(nh.ok()){
         ros::spinOnce();
@@ -61,11 +75,12 @@ int main(int argc,char** argv)
         left_img = leftImageSubClass.getImage();
         if(!left_img.empty() && !right_img.empty()){
 
-          temp = left_img(windowSizeRectangule);
+          cv::Mat temp = left_img(windowSizeRectangule);
           cv::Point2f difference;
           cv::Mat editedImage;
           // cout<<left_img.size() <<endl;
-          tie(editedImage, difference) = vergFastMatchTemplate.trackTargetPNCC(right_img, temp, 80);
+          cv::Rect _tempRect;
+          tie(editedImage, difference, _tempRect) = vergFastMatchTemplate.trackTargetPNCC(right_img, temp, 80);
           imshow(windowsNameString, editedImage);
           // std::cout<< "Difference: " << difference << endl;
           // calculate the integral

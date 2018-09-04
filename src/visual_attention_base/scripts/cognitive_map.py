@@ -40,7 +40,7 @@ class Visual_Attention:
         # self.slaveController = SlaveCameraController(activeTilitController=True, algorithmToUse ='PNCC', scaleDown=True)
         # Define the markerClass
         self.createVisualizationMarker = CreateVisualizationMarker('camera_link')
-        self.OnTargetSubscriver = rospy.Subscriber('/onTarget', Bool, self.vergeCallBack)
+        self.OnTargetSubscriver = rospy.Subscriber('/right/onTarget', Bool, self.vergeCallBack)
         self.targetPositionSubscriber = rospy.Subscriber("targetPose", Vector3, self.targetPoseCallback)
         self.vergeStatus = False
         self.TargetPose = [0,0,0]

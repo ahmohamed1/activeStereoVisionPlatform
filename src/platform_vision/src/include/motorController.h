@@ -2,7 +2,10 @@
 
 class MotorController{
 public:
-  MotorController(ros::NodeHandle nh, string whichMotorToMove, bool _Debug=true, bool _tune = false){
+  MotorController(){
+
+  }
+  MotorController(ros::NodeHandle nh, string whichMotorToMove, bool _Debug=false, bool _tune = false){
     Debug = _Debug;
     std::string PanMotorTopic = "/" + whichMotorToMove + "/pan/move";
     std::string TiltMotorTopic = "/" + whichMotorToMove + "/tilt/move";
@@ -170,20 +173,23 @@ public:
     return state;
   }
 
-  void checkVergeCorrectely(bool panState, bool tiltState){
+  bool checkVergeCorrectely(bool panState, bool tiltState){
       if (panState && tiltState){
         countVerge ++;
-        if(countVerge == 20){
+        if(countVerge == 50){
           // Publish True
           std_msgs::Bool msg;
           msg.data = true;
           VergeConpletePublisher.publish(msg);
           countVerge = 0;
+          return 1;
         }
-      }else{
+      }
+      else{
         std_msgs::Bool msg;
         msg.data = false;
         VergeConpletePublisher.publish(msg);
+        return 0;
       }
   }
 
@@ -194,7 +200,7 @@ public:
     if (abs(value) > thresholdMotorController[MotorID]){
       currentPosition[MotorID] += speed;
       motorPos[MotorID].data = currentPosition[MotorID];
-      std::cout << "Motor Tilt Speed: " << currentPosition[MotorID] << std::endl;
+      // std::cout << "Motor Tilt Speed: " << currentPosition[MotorID] << std::endl;
       if (currentPosition[MotorID] < motorMaxLimit and currentPosition[MotorID] > motorMinLimit){
         whichMotorToUse(MotorID);
       }
@@ -202,7 +208,7 @@ public:
     }else if (abs(value) <  thresholdMotorController[MotorID] && abs(value) >  thresholdMotorController[MotorID]){
       currentPosition[MotorID] -= value * 0.001;
       motorPos[MotorID].data = currentPosition[MotorID];
-      std::cout << "Motor Tile Speed: " << currentPosition[MotorID] << std::endl;
+      // std::cout << "Motor Tile Speed: " << currentPosition[MotorID] << std::endl;
       if (currentPosition[MotorID] < motorMaxLimit and currentPosition[MotorID] > motorMinLimit){
         whichMotorToUse(MotorID);
       }
@@ -222,6 +228,10 @@ cv::Point2f converteToImageCoordinate(Size imageSize, cv::Point2f position){
 
 }
 
+void tiltGoto(float newPose){
+  currentPosition[1] = newPose;
+  motorPos[1].data = currentPosition[1];
+}
 
 void whichMotorToUse(int MotorID){
   if ( MotorID == 0){
