@@ -174,23 +174,28 @@ public:
   }
 
   bool checkVergeCorrectely(bool panState, bool tiltState){
-      if (panState && tiltState){
+    bool state = false;
+      if (panState==true && tiltState==true){
         countVerge ++;
-        if(countVerge == 50){
+        // cout << "Counting: " <<countVerge<<endl;
+        if(countVerge > 30){
           // Publish True
           std_msgs::Bool msg;
           msg.data = true;
           VergeConpletePublisher.publish(msg);
           countVerge = 0;
-          return 1;
+          state = true;
         }
       }
       else{
         std_msgs::Bool msg;
         msg.data = false;
         VergeConpletePublisher.publish(msg);
-        return 0;
+        countVerge = 0;
+        state = false;
       }
+
+      return state;
   }
 
 

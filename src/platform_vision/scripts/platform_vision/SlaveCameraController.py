@@ -56,9 +56,9 @@ class SlaveCameraController:
         if self.ScaleDown:
             # self.imageSize = np.array([920, 640])
             self.imageSize = np.array([2048/2 , 1080/2])
-            self.templateSize = 35
+            self.templateSize = 180
             self.thresholdMotorController = np.array([20,6])
-            pyramidLevel = 4
+            pyramidLevel = 3
             self.scaleTemplate = 0.5
         else:
             self.imageSize = np.array([2048 , 1080])
@@ -212,6 +212,7 @@ class SlaveCameraController:
             self.fastMatchingPyramid.createTemplate(template, self.imageSize/2)
             # cv2.imshow("template image", self.fastMatchingPyramid.getTemplate())
             _img, centerPoint = self.fastMatchingPyramid.trackObject(image)
+            print(_img.shape)
             cv2.imshow('Slave Camera', _img)
         elif self.algorithmToUse == 'feature' or self.featueMatchingAlgorithmState:
             Size = self.templateSize

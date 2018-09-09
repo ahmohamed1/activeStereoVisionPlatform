@@ -12,9 +12,28 @@
 
 struct SaliencyData{
     cv::Point2f centerOfTarget;
-    cv::Rect boundingBox;
+    cv::Rect2f boundingBox;
     float probabilityOfTomamto;
+
+
 };
+
+SaliencyData resizeSaliencyData(SaliencyData data, cv::Size smallImageSize, cv::Size largImageSize){
+  float widthRatio = (float)largImageSize.width/smallImageSize.width;
+  float hieghtRatio = (float)largImageSize.height/smallImageSize.height;
+  // cout << widthRatio<< "////" << hieghtRatio <<endl;
+  SaliencyData newScalar;
+  newScalar.centerOfTarget.x = data.centerOfTarget.x * widthRatio;
+  newScalar.centerOfTarget.y = data.centerOfTarget.y * hieghtRatio;
+  newScalar.boundingBox.x = (float)data.boundingBox.x * widthRatio;
+  newScalar.boundingBox.y = (float)data.boundingBox.y * hieghtRatio;
+  newScalar.boundingBox.height = (float)data.boundingBox.height * hieghtRatio;
+  newScalar.boundingBox.width = (float)data.boundingBox.width * widthRatio;
+  newScalar.probabilityOfTomamto = (float)data.probabilityOfTomamto;
+  // cout << (float)data.boundingBox.height << "  "<<(float)data.boundingBox.width <<endl;
+  // cout << (float)newScalar.boundingBox.height << "  " << (float)newScalar.boundingBox.width <<endl;
+  return newScalar;
+}
 
 class FocalOfAttentionBasedWatershed{
 
@@ -30,9 +49,9 @@ public:
         cv::resizeWindow(windowsNameS, 720,500);
         cv::moveWindow(windowsNameS, 1000,30);
 
-        cv::namedWindow(windowsNameWatershed, cv::WINDOW_NORMAL);
-        cv::resizeWindow(windowsNameWatershed, 720,500);
-        cv::moveWindow(windowsNameWatershed, 1000,30);
+        // cv::namedWindow(windowsNameWatershed, cv::WINDOW_NORMAL);
+        // cv::resizeWindow(windowsNameWatershed, 720,500);
+        // cv::moveWindow(windowsNameWatershed, 1000,30);
 
         MostSalientPoint = cv::Point(-1, -1);
         updateWatershed = false;
@@ -171,7 +190,7 @@ public:
                       cv::Vec3b bgrPixel = originalImageCopy1.at<cv::Vec3b>(center.y, center.x);
                       // check the pixel if it belong to the tomato or not
                       float probability = -0.00258638* bgrPixel[0] + -0.00602994*bgrPixel[1] + 0.00700861*bgrPixel[2] + 0.49576749971493594;
-                      if(probability > 0.5){
+                      if(probability > 0.60){
                           SaliencyData temp_;
                           temp_.boundingBox = r;
                           temp_.centerOfTarget = center;
@@ -179,6 +198,7 @@ public:
                           tempData.push_back(temp_);
                           drawContours(originalImageCopy1, contours, i, Scalar(0,255,255), -1, 8);
                           cv::circle(originalImageCopy1, center, 5, cv::Scalar(0,255,0),-1);
+                          cv::rectangle(originalImageCopy1, cv::Rect(r) ,cv::Scalar(0,255,0));
                       }else{
 //                          drawContours(originalImageCopy1, contours, i, Scalar(0,255,0), 2, 8);
                       }
@@ -190,7 +210,7 @@ public:
             }
         }
         cv::imshow(windowsNameS, originalImageCopy1);
-        cv::imshow(windowsNameWatershed, *saliencyImage);
+        // cv::imshow(windowsNameWatershed, *saliencyImage);
         cv::waitKey(1);
         return tempData;
     }
@@ -249,7 +269,7 @@ public:
     }
 
 
-    void ComputeFOA(cv::Mat saliencyMap, cv::Mat RGBimage){
+    std::vector<SaliencyData> ComputeFOA(cv::Mat saliencyMap, cv::Mat RGBimage){
 
         saliencyMap.copyTo(inputSaliency);
         cvtColor(saliencyMap, saliencyMapRGB, CV_GRAY2BGR);
@@ -260,8 +280,9 @@ public:
 
         markerMask = bhFindLocalMaximum(inputSaliency, 7);
         saliencyData = drawFOA();
-        cout<< "Totoal Object Found: " << saliencyData.size() << endl;
+        // cout<< "Totoal Object Found: " << saliencyData.size() << endl;
         char ikey = cv::waitKey(1);
+        return saliencyData;
 
     }
     //////////////////////
