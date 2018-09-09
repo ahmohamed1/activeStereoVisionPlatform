@@ -5,6 +5,7 @@
 #include<cv_bridge/cv_bridge.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Pose2D.h>
 #include <string>
 #include<std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
@@ -224,11 +225,14 @@ int main(int argc,char** argv)
     GetImageClass leftImageSubClass(nh, "left");
     ros::Subscriber vergeStatueSubscriber = nh.subscribe("/right/onTarget" ,1, &vergeStatue_callback);
     ros::Subscriber targetPoseSubscriber = nh.subscribe("/targetPose" ,1, &targetPose_callback);
+    ros::Publisher templateSizePublisher = nh.advertise<geometry_msgs::Pose2D>("/templateSize", 1);
     cv::Rect windowSizeRectangule = returnRectanguleSizeOfCenterImage(imageSize,windowSize);
     //Define the publisher
     MotorController motorController(nh, "left", false);
     motorController.moveToZero();
     Mat temp;
+
+
 
     namedWindow(windowsNameString, WINDOW_NORMAL);
     resizeWindow(windowsNameString,640,420);
@@ -256,6 +260,11 @@ int main(int argc,char** argv)
             temp = targetList.back();
             targetList.pop_back();
             motorState = false;
+            // Publish the template size
+            geometry_msgs::Pose2D templateSize;
+            templateSize.x = temp.cols;
+            templateSize.y = temp.rows;
+            templateSizePublisher.publish(templateSize);
             machineStateStatus = machineStateStatusList[1];
           }
           // mouse click gaze controller

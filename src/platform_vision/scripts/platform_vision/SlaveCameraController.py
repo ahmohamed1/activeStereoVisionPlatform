@@ -10,7 +10,7 @@ import argparse
 
 
 from geometry_msgs.msg import Twist
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Vector3, Pose2D
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from std_msgs.msg import Int64
@@ -34,7 +34,7 @@ class SlaveCameraController:
         self.motorPublisher = rospy.Publisher('/right/pan/move', Float64, queue_size=2)
         self.left_image_sub = rospy.Subscriber('/stereo/left/image_raw', Image, self.left_image_callback)
         self.right_image_sub = rospy.Subscriber('/stereo/right/image_raw', Image, self.right_image_callback)
-        self.templateSizeSub = rospy.Subscriber('/templateSize', Int64, self.templateSizeCallBack)
+        self.templateSizeSub = rospy.Subscriber('/templateSize', Pose2D, self.templateSizeCallBack)
         self.bridge = CvBridge()
 
         self.OnTargetPublisher = rospy.Publisher('/right/onTarget', Bool, queue_size=1)
@@ -56,13 +56,13 @@ class SlaveCameraController:
         if self.ScaleDown:
             # self.imageSize = np.array([920, 640])
             self.imageSize = np.array([2048/2 , 1080/2])
-            self.templateSize = 180
+            self.templateSize = 80
             self.thresholdMotorController = np.array([20,6])
-            pyramidLevel = 3
+            pyramidLevel = 4
             self.scaleTemplate = 0.5
         else:
             self.imageSize = np.array([2048 , 1080])
-            self.templateSize = 220
+            self.templateSize = 200
             self.thresholdMotorController = np.array([50,10])
             pyramidLevel = 7
             self.scaleTemplate = 1.0
@@ -201,9 +201,11 @@ class SlaveCameraController:
         self.right_image = self.convertROSToCV(data)
 
     def templateSizeCallBack(self, data):
-        templateSize = data.data
+        # templateSize = data.data
+        templateSize = [data.x, data.y]
         if self.algorithmToUse == 'PNCC':
-            self.fastMatchingPyramid.setTemplateSize(int((templateSize*self.scaleTemplate)/1.8))
+            # self.fastMatchingPyramid.setTemplateSize(int((templateSize*self.scaleTemplate)/1.8))
+            self.fastMatchingPyramid.setTemplateSize2D(templateSize)
 
 
     def computeTheCenterUsingDifferentAlgorithm(self, template,image):
@@ -212,7 +214,6 @@ class SlaveCameraController:
             self.fastMatchingPyramid.createTemplate(template, self.imageSize/2)
             # cv2.imshow("template image", self.fastMatchingPyramid.getTemplate())
             _img, centerPoint = self.fastMatchingPyramid.trackObject(image)
-            print(_img.shape)
             cv2.imshow('Slave Camera', _img)
         elif self.algorithmToUse == 'feature' or self.featueMatchingAlgorithmState:
             Size = self.templateSize

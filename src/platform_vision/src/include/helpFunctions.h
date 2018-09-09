@@ -72,7 +72,7 @@ public:
   }
 
   GetImageClass(){
-    
+
   }
   void img_callback(const sensor_msgs::ImageConstPtr& img_msg){
       image =  convertROSMat2OpencvMat(img_msg);
@@ -94,6 +94,15 @@ cv::Rect returnRectanguleSizeOfCenterImage(cv::Size imageSize, int windowSize){
   windowSizeRectangule.x = imageSize.width/2 - windowSize/2;
   windowSizeRectangule.height = windowSize;
   windowSizeRectangule.width = windowSize;
+  return windowSizeRectangule;
+}
+
+cv::Rect returnRectanguleSizeOfCenterImage2D(cv::Size imageSize, cv::Size windowSize){
+  cv::Rect windowSizeRectangule;
+  windowSizeRectangule.y = imageSize.height/2 - windowSize.height/2;
+  windowSizeRectangule.x = imageSize.width/2 - windowSize.width/2;
+  windowSizeRectangule.height = windowSize.height;
+  windowSizeRectangule.width = windowSize.width;
   return windowSizeRectangule;
 }
 

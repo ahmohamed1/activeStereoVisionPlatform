@@ -339,7 +339,7 @@ public:
             bottomRight.y = point.y + size.height / 2;
 
             rectTemp = cv::Rect(topLeft, bottomRight);
-            rectangle(*image, topLeft, bottomRight, CV_RGB(red, green, blue),2);
+            rectangle(*image, topLeft, bottomRight, CV_RGB(red, green, blue),5);
         }
 
         return rectTemp;

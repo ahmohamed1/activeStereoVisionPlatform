@@ -15,10 +15,11 @@ class FastMatchingPyramid:
         self.pyramidLevel = pyramidLevel
         self.imageSize = imageSize
         self.templateSize = windowSize
-        self.x1 = (self.imageSize[0]/2 - (self.templateSize/2))
-        self.x2 = (self.imageSize[0]/2 + (self.templateSize/2))
-        self.y1 = (self.imageSize[1]/2 - (self.templateSize/2))
-        self.y2 = (self.imageSize[1]/2 + (self.templateSize/2))
+        self.templateSize2D = [windowSize,windowSize]
+        self.x1 = (self.imageSize[0]/2 - (self.templateSize2D[0]/2))
+        self.x2 = (self.imageSize[0]/2 + (self.templateSize2D[0]/2))
+        self.y1 = (self.imageSize[1]/2 - (self.templateSize2D[0]/2))
+        self.y2 = (self.imageSize[1]/2 + (self.templateSize2D[0]/2))
         self.showImage = showImage
         self.grayImage = grayImage
         self.windowname = operatingName
@@ -48,6 +49,9 @@ class FastMatchingPyramid:
     def setTemplateSize(self,size):
         self.templateSize = size
 
+    def setTemplateSize2D(self,size):
+        self.templateSize2D = size
+
 
     def setgrayImage(grayImageState):
         self.grayImage = grayImageState
@@ -64,25 +68,25 @@ class FastMatchingPyramid:
 
 
     def createTemplate(self, leftImage, coordinate):
-        if coordinate[0] - (self.templateSize/2) < 0 :
+        if coordinate[0] - (self.templateSize2D[0]/2) < 0 :
             self.x1 = 0
-            self.x2 = self.templateSize
-        elif coordinate[0] + (self.templateSize/2) > self.imageSize[0]:
-            self.x1 = self.imageSize[0] - self.templateSize
+            self.x2 = self.templateSize2D[0]
+        elif coordinate[0] + (self.templateSize2D[0]/2) > self.imageSize[0]:
+            self.x1 = int(self.imageSize[0] - self.templateSize2D[0])
             self.x2 = self.imageSize[0]
         else:
-            self.x1 = coordinate[0] - (self.templateSize/2)
-            self.x2 = coordinate[0] + (self.templateSize/2)
+            self.x1 = int(coordinate[0] - (self.templateSize2D[0]/2))
+            self.x2 = int(coordinate[0] + (self.templateSize2D[0]/2))
 
-        if coordinate[1] - (self.templateSize/2) < 0 :
+        if coordinate[1] - (self.templateSize2D[1]/2) < 0 :
             self.y1 = 0
-            self.y2 = self.templateSize
-        elif coordinate[1] + (self.templateSize/2) > self.imageSize[1]:
-            self.y1 = self.imageSize[1] - self.templateSize
+            self.y2 = self.templateSize2D[1]
+        elif coordinate[1] + (self.templateSize2D[1]/2) > self.imageSize[1]:
+            self.y1 = int(self.imageSize[1] - self.templateSize2D[1])
             self.y2 = self.imageSize[1]
         else:
-            self.y1 = coordinate[1] - (self.templateSize/2)
-            self.y2 = coordinate[1] + (self.templateSize/2)
+            self.y1 = int(coordinate[1] - (self.templateSize2D[1]/2))
+            self.y2 = int(coordinate[1] + (self.templateSize2D[1]/2))
         # print (self.x1, self.x2, self.y1, self.y2)
         self.template = leftImage[self.y1:self.y2, self.x1:self.x2]
         # cv2.imshow(self.templateName, self.template)
@@ -125,6 +129,7 @@ class FastMatchingPyramid:
 
     def getTemplate(self):
         return self.template
+
 
     def trackObject(self, rightImage):
         if self.template is not None:

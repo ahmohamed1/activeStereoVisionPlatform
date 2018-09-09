@@ -5,6 +5,7 @@
 #include<cv_bridge/cv_bridge.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Pose2D.h>
 #include <string>
 #include<std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
@@ -27,25 +28,40 @@ float left_pan = 0,right_pan = 0;
 float baseline_value = 0.0;
 Size imageSize = Size(2048 , 1080);//Size(4096,2160);
 
+cv::Size templateSize2D(0,0);
+bool updateTemplateSize2D = false;
+void templateSize_callback(const geometry_msgs::Pose2D &tempSize){
+
+  templateSize2D = cv::Size(tempSize.x, tempSize.y);
+  updateTemplateSize2D = true;
+
+}
 
 int main(int argc,char** argv)
 {
 
     int windowSize = 200;
+    int confidenceSize = 65;
     if (argc > 1){
       istringstream ss(argv[1]);
       if (!(ss >> windowSize)){
         std::cout << "No argument \n";
-      }else{
-        std::cout << "windowSize " << windowSize << '\n';
       }
-    }else{
-      std::cout << "No Argument "<< '\n';
-    }
 
+      istringstream saa(argv[2]);
+      if (!(saa >> confidenceSize)){
+        std::cout << "No argument \n";
+      }else{
+        cout<<"confidence tracking is " << confidenceSize <<endl;
+      }
+  }else{
+    std::cout << "No Argument "<< '\n';
+  }
+
+    templateSize2D = cv::Size(windowSize,windowSize);
     ros::init(argc,argv,"VergenceController");
     ros::NodeHandle nh;
-
+    ros::Subscriber templateSizeSubscriber = nh.subscribe("/templateSize" ,1, &templateSize_callback);
 
     FastTemplateMatch vergFastMatchTemplate;
     string windowsNameString = "SlaveCamera";
@@ -53,14 +69,12 @@ int main(int argc,char** argv)
     //define the subscriber and publisher
     GetImageClass rightImageSubClass(nh, "right");
     GetImageClass leftImageSubClass(nh, "left");
-    cv::Rect windowSizeRectangule = returnRectanguleSizeOfCenterImage(imageSize,windowSize);
+    cv::Rect windowSizeRectangule = returnRectanguleSizeOfCenterImage2D(imageSize, templateSize2D);
     //Define the publisher
     MotorController motorController(nh, "right");
     motorController.moveToZero();
 
     // motorController.tiltGoto(10.0);
-
-
 
     namedWindow(windowsNameString, WINDOW_NORMAL);
     resizeWindow(windowsNameString,640,480);
@@ -75,12 +89,16 @@ int main(int argc,char** argv)
         left_img = leftImageSubClass.getImage();
         if(!left_img.empty() && !right_img.empty()){
 
+          if(updateTemplateSize2D == true){
+            windowSizeRectangule = returnRectanguleSizeOfCenterImage2D(imageSize, templateSize2D);
+            updateTemplateSize2D = false;
+          }
           cv::Mat temp = left_img(windowSizeRectangule);
           cv::Point2f difference;
           cv::Mat editedImage;
           // cout<<left_img.size() <<endl;
           cv::Rect _tempRect;
-          tie(editedImage, difference, _tempRect) = vergFastMatchTemplate.trackTargetPNCC(right_img, temp, 80);
+          tie(editedImage, difference, _tempRect) = vergFastMatchTemplate.trackTargetPNCC(right_img, temp, confidenceSize);
           imshow(windowsNameString, editedImage);
           // std::cout<< "Difference: " << difference << endl;
           // calculate the integral
