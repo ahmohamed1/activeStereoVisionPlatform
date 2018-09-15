@@ -1,0 +1,9 @@
+<!-- -->
+
+<launch>
+
+  <node name="fastTemplateMtchingCpp" pkg="platform_vision" type="fastTemplateMtching"/>
+
+  <node name="saliencyMapCpp" pkg="visual_attention_base" type="saliencyMapCpp"/>
+
+</launch>
