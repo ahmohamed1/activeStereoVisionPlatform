@@ -56,11 +56,11 @@ tuple<cv::Mat, cv::Mat> BGRColorOppenetProcess(Mat image){
     RG.setTo(1, RG > thresholder);
     //Apply Mask
     Mat mask;
-    cv::bitwise_and(image,image,mask,RG);
-    cv::imshow("mask", mask);
+    // cv::bitwise_and(image,image,mask,RG);
+    // cv::imshow("mask", mask);
 
     Mat BY = (B - RGMin);// / MaxBGR;
-    cv::imshow("RG", RG);
+    // cv::imshow("RG", RG);
     return make_tuple(RG, BY);
 }
 

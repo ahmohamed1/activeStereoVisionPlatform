@@ -54,7 +54,7 @@ float angle_x = 0.537310137283333;
 float old_angle_sum = 9999;
 float old_left_angle = 9999;
 float old_right_angle = 9999;
-float error_margen_for_motor_controller = 0.3;
+float error_margen_for_motor_controller = 0.4;
 
 // the blow functions are the function use to get the values
 void left_img_callback(const sensor_msgs::ImageConstPtr& img_msg){
@@ -409,18 +409,20 @@ int main(int argc,char** argv)
            disp = disp(New_window_size);
            undisFrame1 = undisFrame1(New_window_size);
            // Mat processPointCloud;
-           // Mat RG, BY;
-           // tie (RG, BY) = BGRColorOppenetProcess(undisFrame1);
-           // // cout << disp.size() << "  " << RG.size() <<endl;
-           // Mat dispMask;
-           // cv::bitwise_and(disp, disp, dispMask, RG);
-           // cout << "333333"<<endl;
-           // threshold(disp, disp,depth_threshold_threshold, 255, 3 );
+           Mat RG, BY;
+           tie (RG, BY) = BGRColorOppenetProcess(undisFrame1);
+           // Mat mask;
+           cv::bitwise_and(undisFrame1,undisFrame1,undisFrame1,RG);
+           // cout << disp.size() << "  " << RG.size() <<endl;
+           Mat dispMask;
+           cv::bitwise_and(disp, disp, dispMask, RG);
+           // threshold(disp, disp,disp, 255, 3 );
+           cv::imshow("dispMask",dispMask);
            /////////////////////////////////////////////////
            // Find the measurement
            Mat pointCloud;
            // drawBourderAroundObject(undisFrame1, &disp);
-          reprojectImageTo3D(disp, pointCloud, Q, true, CV_32F);
+          reprojectImageTo3D(dispMask, pointCloud, Q, true, CV_32F);
 
 
 
@@ -482,8 +484,8 @@ int main(int argc,char** argv)
 
 
             imshow("Disparity map", disp);
-            createTrackbar("Threshold","Disparity map",&depth_threshold_threshold,255);
-            disparityClass.showColoredDisparity(disp);
+            // createTrackbar("Threshold","Disparity map",&depth_threshold_threshold,255);
+            // disparityClass.showColoredDisparity(disp);
 
             if(show_images){
               //Color Disparity

@@ -242,8 +242,8 @@ target_link_libraries(rectify_image
 #Find the CUDA packages
 find_package(CUDA REQUIRED)
 
-add_executable(match_stereo src/match_stereo.cpp)
-target_link_libraries(match_stereo ${OpenCV_LIBS} ${catkin_LIBRARIES})
+add_executable(affordnceOfGrasping src/affordnceOfGrasping.cpp)
+target_link_libraries(affordnceOfGrasping ${OpenCV_LIBS} ${catkin_LIBRARIES})
 
 add_executable(calibration src/calibration.cpp)
 target_link_libraries(calibration ${OpenCV_LIBS} ${catkin_LIBRARIES})

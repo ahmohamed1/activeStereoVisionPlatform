@@ -212,7 +212,7 @@ int main(int argc,char** argv)
             targetsListInformation.push_back(targetdata);
             multipleMarkerPublisher.publishMarker(targetsListInformation);
             machineStateStatus = machineStateStatusList[0];
-            checkToSaveData = true;
+            // checkToSaveData = true;
           }
 
       }// end of the if statment of the images
