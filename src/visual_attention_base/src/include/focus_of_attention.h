@@ -194,7 +194,7 @@ public:
                           SaliencyData temp_;
                           temp_.boundingBox = r;
                           temp_.centerOfTarget = center;
-                          temp_.probabilityOfTomamto = 1.0;
+                          temp_.probabilityOfTomamto = probability;
                           tempData.push_back(temp_);
                           drawContours(originalImageCopy1, contours, i, Scalar(0,255,255), -1, 8);
                           cv::circle(originalImageCopy1, center, 5, cv::Scalar(0,255,0),-1);

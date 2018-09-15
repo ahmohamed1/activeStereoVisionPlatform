@@ -426,7 +426,7 @@ int main(int argc,char** argv)
 
           // cout << "44444"<<endl;
           //Calculate the point cloud
-           pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud =  disparityClass.MatToPoinXYZ(disp, pointCloud, undisFrame1);
+           pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud =  disparityClass.MatToPoinXYZ(disp, pointCloud, undisFrame1, -baseline_value/2);
           if (mouseMove == true){
            // This just to find the object
            Mat cropedDisparity = disp(selectedRectangle);

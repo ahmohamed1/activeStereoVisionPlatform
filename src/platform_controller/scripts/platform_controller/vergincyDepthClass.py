@@ -22,7 +22,7 @@ class DrawTrackingSystem:
         self.rightCameraAngle = rospy.Subscriber("/right/pan/angle", Float64, self.rightAngleCallback)
         self.tiltAnglgeSibscribtion = rospy.Subscriber("/right/tilt/angle", Float64, self.tiltAngleCallback)
 
-        self.targetPositionPub = rospy.Publisher("targetPose", Vector3, queue_size=1)
+        self.targetPositionPub = rospy.Publisher("/targetPose", Vector3, queue_size=1)
         self.leftAngle = 19
         self.rightAngle = -20
 
@@ -50,7 +50,7 @@ class DrawTrackingSystem:
         self.t = geometry_msgs.msg.TransformStamped()
         self.t.header.frame_id = "/camera_link"
         self.t.header.stamp = rospy.Time.now()
-        self.t.child_frame_id = 'target_1'
+        self.t.child_frame_id = '/focus_point'
 
 
     def dynamicTFBroadcaster(self, _X, _Y,_Z):
@@ -118,8 +118,8 @@ class DrawTrackingSystem:
             RSS = RS * math.cos(self.deg2rad(AL));
             LSS = LS * math.cos(self.deg2rad(AR));
 
-            XposL = (-B/2) + LSS;
-            XposR = (B/2) - RSS;
+            XposL = (B/2) - LSS;
+            XposR = (-B/2) + RSS;
 
             # assinge the coordinate to the object position and publish the topic
             if (AL > AR ):

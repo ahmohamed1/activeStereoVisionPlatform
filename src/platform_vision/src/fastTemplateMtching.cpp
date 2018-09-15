@@ -98,7 +98,12 @@ int main(int argc,char** argv)
           cv::Mat editedImage;
           // cout<<left_img.size() <<endl;
           cv::Rect _tempRect;
-          tie(editedImage, difference, _tempRect) = vergFastMatchTemplate.trackTargetPNCC(right_img, temp, confidenceSize);
+          tie(editedImage, difference, _tempRect) = vergFastMatchTemplate.trackTargetPNCC(right_img, temp,
+                                                                                           confidenceSize,
+                                                                                           false, // bool findMultipleTargets =
+                                                                                            2,    //int numMaxima =
+                                                                                            3,    //int numDownPyrs =
+                                                                                            15);  //int searchExpansion =
           imshow(windowsNameString, editedImage);
           // std::cout<< "Difference: " << difference << endl;
           // calculate the integral

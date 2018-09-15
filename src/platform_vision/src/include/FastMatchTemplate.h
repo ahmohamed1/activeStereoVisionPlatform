@@ -360,6 +360,8 @@ public:
       //Step 2 - create the templet
       //Step 3 - Do the matching process and normalize the result
       // perform the match
+      // cvtColor(source, source, CV_BGR2GRAY);
+      // cvtColor(temp, temp, CV_BGR2GRAY);
       if(!applyFastTemplateMatching(source,
                         temp,
                         &foundPointsList,

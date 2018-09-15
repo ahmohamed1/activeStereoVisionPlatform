@@ -33,11 +33,11 @@ public:
   DisparityClass(Size imageSize = Size(2048 , 1080)){
     imageSize = imageSize;
     BloackSize = 5;
-    NoDisparity = 255;
+    NoDisparity = 64;
     SpeckleWindowSize = 0;
     UniquenessRatio = 2;
     setTextureThreshold = 0;
-    setMinDisparity = 0;
+    setMinDisparity = 64;
     setPreFilterCap = 62;
     setPreFilterSize = 51;
     lambda = 110; //5000.0;
@@ -49,7 +49,7 @@ public:
     FullDP = 1;
     setDisp12MaxDiff = 20;
     Disparity_color_scales = 2;
-    disparityMode = 2;
+    disparityMode = 4;
     mode = (char)disparityMode;
     np_img = 0;
   }
@@ -60,7 +60,7 @@ public:
   void saveImage(Mat undisFrame1, Mat undisFrame2,Mat canvas , Mat disp , Mat color_disparity);
   Mat ComputerDisparity(Mat left, Mat right);
   double calculate_projection_error(cv::Mat left, cv::Mat right, cv::Size boardSize, bool showimg);
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr MatToPoinXYZ(Mat disp, Mat xyz ,Mat undisFrame1);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr MatToPoinXYZ(Mat disp, Mat xyz ,Mat undisFrame1, float baselineSize = 0);
   void showColoredDisparity(cv::Mat disparity);
 
 private:
@@ -98,7 +98,7 @@ private:
 //     }
 // }
 /// This function to convert to cloud point
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr DisparityClass::MatToPoinXYZ(Mat disp, Mat xyz ,Mat undisFrame1)
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr DisparityClass::MatToPoinXYZ(Mat disp, Mat xyz ,Mat undisFrame1, float baselineSize)
  {
    pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud(new pcl::PointCloud<pcl::PointXYZRGB>());
   //  Mat xyz;
@@ -118,7 +118,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr DisparityClass::MatToPoinXYZ(Mat disp, Ma
                Point3f p = xyz.at<Point3f>(i, j);
 
                point.z = p.z;   // I have also tried p.z/16
-               point.x = p.x;
+               point.x = p.x + baselineSize;
                point.y = p.y;
 
                point.b = rgb_ptr[3 * j];

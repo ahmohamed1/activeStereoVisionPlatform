@@ -192,7 +192,7 @@ int main(int argc,char** argv){
       sensor_msgs::PointCloud2 output;
       pcl::toROSMsg(*pointcloud, output);
       output.header.stamp = ros::Time::now();
-      output.header.frame_id = "camera_link";
+      output.header.frame_id = "depth_camera";
       pointCloud_pub.publish(output);
     }
   }

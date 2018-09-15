@@ -53,9 +53,9 @@ class SlaveCameraController:
         self.motorCountForTerminate = 0
         # Define the pyramid algorithm
         self.ScaleDown = scaleDown
-        if self.ScaleDown:
+        if self.ScaleDown > 0:
             # self.imageSize = np.array([920, 640])
-            self.imageSize = np.array([2048/2 , 1080/2])
+            self.imageSize = np.array([2048/self.ScaleDown , 1080/self.ScaleDown])
             self.templateSize = 80
             self.thresholdMotorController = np.array([20,6])
             pyramidLevel = 4
@@ -202,7 +202,10 @@ class SlaveCameraController:
 
     def templateSizeCallBack(self, data):
         # templateSize = data.data
-        templateSize = [data.x, data.y]
+        if self.ScaleDown > 0:
+            templateSize = [data.x/self.ScaleDown, data.y/self.ScaleDown]
+        else:
+            templateSize = [data.x, data.y]
         if self.algorithmToUse == 'PNCC':
             # self.fastMatchingPyramid.setTemplateSize(int((templateSize*self.scaleTemplate)/1.8))
             self.fastMatchingPyramid.setTemplateSize2D(templateSize)
@@ -262,7 +265,7 @@ class SlaveCameraController:
                 if panMotorstate and tiltMotorState:
                     self.motorCountForTerminate += 1
                     # print("count: " , self.motorCountForTerminate)
-                if self.motorCountForTerminate > 15:
+                if self.motorCountForTerminate > 35:
                     # print('Target centered')
                     self.motorCountForTerminate = 0
                     boolState.data = True
