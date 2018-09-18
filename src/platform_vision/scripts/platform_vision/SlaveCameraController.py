@@ -95,6 +95,15 @@ class SlaveCameraController:
             self.slaveTiltMotorPub.publish(self.motorPos[1])
             r.sleep()
             i +=1
+
+        self.currentPos[1] = 8
+        while (i < 5):
+            self.motorPos[1].data = self.currentPos[1]
+            # set the motor to the zero position
+            self.slaveTiltMotorPub.publish(self.motorPos[1])
+            r.sleep()
+            i +=1
+
         # sleep for 0.5 seconds
         rospy.sleep(.5)
         self.terminateButton = 1
@@ -131,11 +140,11 @@ class SlaveCameraController:
         if event==cv2.EVENT_RBUTTONDOWN:
             self.terminateButton += 1
 
-    def moveToZero(self):
+    def moveToZero(self, pan=0.0, tilt=0.0):
         print('Motor move to ZERO position!!!')
         for i in range(10):
-            self.motorPos[0].data = 0.0
-            self.motorPos[1].data = 0.0
+            self.motorPos[0].data = pan
+            self.motorPos[1].data = tilt
             self.currentPos = [0.0, 0.0]
             # set the motor to the zero position
             self.motorPublisher.publish(self.motorPos[0])
@@ -202,6 +211,7 @@ class SlaveCameraController:
 
     def templateSizeCallBack(self, data):
         # templateSize = data.data
+        # self.moveToZero(pan=5, tilt=10)
         if self.ScaleDown > 0:
             templateSize = [data.x/self.ScaleDown, data.y/self.ScaleDown]
         else:
@@ -216,7 +226,9 @@ class SlaveCameraController:
         if self.algorithmToUse == 'PNCC':
             self.fastMatchingPyramid.createTemplate(template, self.imageSize/2)
             # cv2.imshow("template image", self.fastMatchingPyramid.getTemplate())
+            # print("1")
             _img, centerPoint = self.fastMatchingPyramid.trackObject(image)
+            # print("2")
             cv2.imshow('Slave Camera', _img)
         elif self.algorithmToUse == 'feature' or self.featueMatchingAlgorithmState:
             Size = self.templateSize

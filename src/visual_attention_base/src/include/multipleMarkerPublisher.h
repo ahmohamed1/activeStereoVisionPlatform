@@ -54,7 +54,7 @@ public:
       ssl<<"Target ID: "<< ID
          <<"\n3D Position: (" << x <<"," << y <<"," << z << ")"
          <<"\n2D Probability: " << target.probability2D
-         <<"\n3D Probability: " << target.probability3D;
+         <<"\n3D RMS: " << target.probability3D;
 
       string markerInfo = ssl.str();
       ssl.str("");
@@ -64,9 +64,9 @@ public:
       marker.pose.position.x = x;
       marker.pose.position.y = y;
       marker.pose.position.z = z - 0.05;
-      marker.scale.z = 0.04;
-      marker.scale.x = 0.04;
-      marker.scale.y = 0.04;
+      marker.scale.z = 0.03;
+      marker.scale.x = 0.03;
+      marker.scale.y = 0.03;
       marker.color.r = 1.0;
       marker.color.g = 1.0;
       marker.color.b = 0.0;

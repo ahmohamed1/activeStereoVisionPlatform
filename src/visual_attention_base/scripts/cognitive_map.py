@@ -3,7 +3,7 @@
 import rospy
 import numpy as np
 from std_msgs.msg import Bool
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Vector3, Pose2D
 
 
 # import local packags
@@ -42,15 +42,16 @@ class Visual_Attention:
         self.createVisualizationMarker = CreateVisualizationMarker('camera_link')
         self.OnTargetSubscriver = rospy.Subscriber('/right/onTarget', Bool, self.vergeCallBack)
         self.targetPositionSubscriber = rospy.Subscriber("targetPose", Vector3, self.targetPoseCallback)
+        self.templateSize2DPublisher = rospy.Publisher("/templateSize", Pose2D, queue_size=1)
         self.vergeStatus = False
         self.TargetPose = [0,0,0]
         # Reset the system to ZERO
-        self.masterCameraController.moveToZero()
+        self.masterCameraController.moveToZero(tilt_pose=-8.0)
         # self.slaveController.moveToZero()
 
     def moveToZero(self):
         # Reset the system to ZERO
-        self.masterCameraController.moveToZero()
+        self.masterCameraController.moveToZero(tilt_pose=-8.0)
         # self.slaveController.moveToZero()
 
     def vergeCallBack(self, data):
@@ -93,6 +94,10 @@ class Visual_Attention:
                 # Step 3: wait the topic from vergency controller to store the pose of the targets
                 print("Verging on target  ====>" )
                 # pose3D = self.slaveController.trackObject(True)
+                templateSize_ = Pose2D()
+                templateSize_.x = targetToTrack[4].shape[0]
+                templateSize_.y = targetToTrack[4].shape[1]
+                self.templateSize2DPublisher.publish(templateSize_)
                 self.checkVerge()
                 pose3D = self.TargetPose
                 print ("3D pose: ", pose3D)

@@ -74,7 +74,8 @@ int main(int argc,char** argv)
     MotorController motorController(nh, "right");
     motorController.moveToZero();
 
-    // motorController.tiltGoto(10.0);
+    ros::Duration(2).sleep();
+    motorController.tiltGoto(8);
 
     namedWindow(windowsNameString, WINDOW_NORMAL);
     resizeWindow(windowsNameString,640,480);
@@ -101,9 +102,9 @@ int main(int argc,char** argv)
           tie(editedImage, difference, _tempRect) = vergFastMatchTemplate.trackTargetPNCC(right_img, temp,
                                                                                            confidenceSize,
                                                                                            false, // bool findMultipleTargets =
-                                                                                            2,    //int numMaxima =
+                                                                                            5,    //int numMaxima =
                                                                                             3,    //int numDownPyrs =
-                                                                                            15);  //int searchExpansion =
+                                                                                            50);  //int searchExpansion =
           imshow(windowsNameString, editedImage);
           // std::cout<< "Difference: " << difference << endl;
           // calculate the integral

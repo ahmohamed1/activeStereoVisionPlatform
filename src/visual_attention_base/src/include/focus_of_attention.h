@@ -47,7 +47,7 @@ public:
 
         cv::namedWindow(windowsNameS, cv::WINDOW_NORMAL);
         cv::resizeWindow(windowsNameS, 720,500);
-        cv::moveWindow(windowsNameS, 1000,30);
+        cv::moveWindow(windowsNameS, 500,100);
 
         // cv::namedWindow(windowsNameWatershed, cv::WINDOW_NORMAL);
         // cv::resizeWindow(windowsNameWatershed, 720,500);
@@ -278,7 +278,7 @@ public:
         markerMask = Scalar::all(0);
         std::vector<SaliencyData> saliencyData;
 
-        markerMask = bhFindLocalMaximum(inputSaliency, 7);
+        markerMask = bhFindLocalMaximum(inputSaliency, 40);
         saliencyData = drawFOA();
         // cout<< "Totoal Object Found: " << saliencyData.size() << endl;
         char ikey = cv::waitKey(1);

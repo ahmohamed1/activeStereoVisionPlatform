@@ -73,16 +73,17 @@ public:
     cout<< "mapExponatialValue: " << pan << " " << tilt<< endl;
   }
 
-  void moveToZero(){
-
-    for(int j = 0; j< 5; j++){
+  void moveToZero(int pan= 0.0, int tilt = 0.0){
+    ros::Rate r(15); // 10 hz
+    for(int j = 0; j< 15; j++){
       ros::spinOnce();
-      for(int i =0; i < 2;i++){
-        currentPosition[i] = 0.0;
-        motorPos[i].data = currentPosition[i];
-      }
+      currentPosition[0] = pan;
+      currentPosition[1] = tilt;
+      motorPos[0].data = currentPosition[0];
+      motorPos[1].data = currentPosition[1];
       motorPanPublisher.publish(motorPos[0]);
-      motorTiltPublisher.publish(motorPos[0]);
+      motorTiltPublisher.publish(motorPos[1]);
+      r.sleep();
     }
   }
   int signnum(float x) {
@@ -235,7 +236,11 @@ cv::Point2f converteToImageCoordinate(Size imageSize, cv::Point2f position){
 
 void tiltGoto(float newPose){
   currentPosition[1] = newPose;
-  motorPos[1].data = currentPosition[1];
+  for(int j = 0; j< 5; j++){
+    ros::spinOnce();
+    motorPos[1].data = currentPosition[1];
+    motorTiltPublisher.publish(motorPos[1]);
+  }
 }
 
 void whichMotorToUse(int MotorID){

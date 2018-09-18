@@ -14,17 +14,23 @@
 #include "opencv2/imgproc.hpp"
 #include <opencv2/cudafilters.hpp>
 
-#include <pcl/io/pcd_io.h>
 #include <pcl/point_cloud.h>
-#include <pcl_ros/point_cloud.h>
+#include <pcl/point_types.h>
+#include <iostream>
+#include <pcl/io/ply_io.h>
+#include <pcl/io/vtk_lib_io.h>
+#include <pcl/io/impl/vtk_lib_io.hpp>
+#include <pcl/registration/icp.h>
+#include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/visualization/cloud_viewer.h>
-#include <sensor_msgs/PointCloud2.h>
 using namespace cv;
 using namespace cv::ximgproc;
 using namespace std;
 
 #include "include/helpFunctions.h"
 #include "include/disparityClass.h"
+#include "include/thresholdPointCloud.h"
+#include "include/pointCloudHelpFunctions.h"
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
@@ -130,6 +136,8 @@ Mat dilateElmt = getStructuringElement(MORPH_RECT, Size(13, 13));
 
 int main(int argc,char** argv)
 {
+
+
   bool resize_image_for_disparity = true;
   // std::cout << argv[1] << std::endl;
 
@@ -160,12 +168,13 @@ int main(int argc,char** argv)
   ros::Subscriber right_img_sub = nh.subscribe("/stereo/right/image_raw",10,right_img_callback);
 
   pointCloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/pcl_output",1);
+  ros::Publisher RMS_Publisher = nh.advertise<std_msgs::Float64> ("/pointCloud_rms", 1);
   // define the angle subscriper
   ros::Subscriber right_pan_sub = nh.subscribe("/right/pan/angle",10,right_pan_callback);
   ros::Subscriber left_pan_sub = nh.subscribe("/left/pan/angle",10,left_pan_callback);
   ros::Subscriber baseline_sub = nh.subscribe("/baseline/position",10,baseline_callback);
   //////////////////////////////////////////////////////////////////
-
+  ThresholdPointCloud thresholdPointCloud(nh);
 
   // pcl::visualization::CloudViewer viewer ("Simple Cloud Viewer");
   // These storage for the intrinsic and distortion coffeicent
@@ -384,7 +393,8 @@ int main(int argc,char** argv)
 
             // cout << "00000"<<endl;
             if(resize_image_for_disparity){
-              cv::Size disparity_image = Size(640,420); // Size(1344,376); //Size(640,420); // Size(320,240);
+              // cv::Size disparity_image = Size(640,420); // Size(1344,376); //Size(640,420); // Size(320,240);
+              cv::Size disparity_image = Size(1010,740);
               cv::resize(undisFrame1_gray, undisFrame1_gray, disparity_image);
               cv::resize(undisFrame2_gray, undisFrame2_gray, disparity_image);
             }
@@ -413,22 +423,22 @@ int main(int argc,char** argv)
            tie (RG, BY) = BGRColorOppenetProcess(undisFrame1);
            // Mat mask;
            cv::bitwise_and(undisFrame1,undisFrame1,undisFrame1,RG);
-           // cout << disp.size() << "  " << RG.size() <<endl;
            Mat dispMask;
            cv::bitwise_and(disp, disp, dispMask, RG);
-           // threshold(disp, disp,disp, 255, 3 );
-           cv::imshow("dispMask",dispMask);
+           cv::Mat templateMask = thresholdPointCloud.returnMaskForTemplate(dispMask);
+           cv::Mat dispMask2;
+           cv::bitwise_and(undisFrame1,undisFrame1,undisFrame1,templateMask);
+           cv::bitwise_and(dispMask, dispMask, dispMask2, templateMask);
+           // cv::imshow("dispMask",dispMask2);
            /////////////////////////////////////////////////
            // Find the measurement
            Mat pointCloud;
            // drawBourderAroundObject(undisFrame1, &disp);
-          reprojectImageTo3D(dispMask, pointCloud, Q, true, CV_32F);
-
-
+          reprojectImageTo3D(dispMask2, pointCloud, Q, true, CV_32F);
 
           // cout << "44444"<<endl;
           //Calculate the point cloud
-           pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud =  disparityClass.MatToPoinXYZ(disp, pointCloud, undisFrame1, -baseline_value/2);
+           pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud =  disparityClass.MatToPoinXYZ(dispMask2, pointCloud, undisFrame1, -baseline_value/2);
           if (mouseMove == true){
            // This just to find the object
            Mat cropedDisparity = disp(selectedRectangle);
@@ -443,6 +453,15 @@ int main(int argc,char** argv)
            output.header.frame_id = "depth_camera";
            pointCloud_pub.publish(output);
 
+           Eigen::Vector4f centroid;
+           pcl::compute3DCentroid(*pointcloud, centroid);
+            // cout << centroid[0] <<endl;
+            float RMS = ProbabilitySphere(*pointcloud, centroid, 0.035);
+            // compute rms
+            cout << "RMS is =" << RMS <<endl;
+            std_msgs::Float64 rms_msg;
+            rms_msg.data = RMS;
+            RMS_Publisher.publish(rms_msg);
           /////////////////////////////////////////////////////////////////////
            // Compute the depth instead Disparity
            Mat depth_image[3];

@@ -128,7 +128,7 @@ tuple<cv::Mat ,bool> computeSaliencyMapTest2(cv::Mat image, int windowSize, std:
 
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
-tuple<std::vector<templateWithProbability>, cv::Mat> computeMultipleTargets(cv::Mat left_img){
+tuple<std::vector<templateWithProbability>, cv::Mat, cv::Mat> computeMultipleTargets(cv::Mat left_img){
   std::vector<templateWithProbability> targetList;
   cv::Mat left_img_copy;
   left_img.copyTo(left_img_copy);
@@ -154,11 +154,11 @@ tuple<std::vector<templateWithProbability>, cv::Mat> computeMultipleTargets(cv::
   }
   cout<<"   Total targets found = " << targetList.size() << endl;
   cv::resize(SMImage,SMImage,left_img.size());
-  return make_tuple(targetList, SMImage);
+  return make_tuple(targetList, SMImage, left_img_copy);
 }
 
 
-void saveData(cv::Mat leftImage, cv::Mat rightImage, cv::Mat templateImage, cv::Mat saliencyMap, int targetID){
+void saveData(cv::Mat leftImage, cv::Mat rightImage, cv::Mat templateImage, cv::Mat saliencyMap, cv::Mat FOAImage, int targetID){
 
     stringstream ssl;
     ssl<<"/home/abdulla/dev/cognitiveMapData/"<<targetID <<"_left.jpg";
@@ -183,4 +183,10 @@ void saveData(cv::Mat leftImage, cv::Mat rightImage, cv::Mat templateImage, cv::
     string saliencyMap_image_name = sss.str();
     sss.str("");
     imwrite(saliencyMap_image_name, saliencyMap);
+
+    stringstream ssfoa;
+    ssfoa<<"/home/abdulla/dev/cognitiveMapData/"<<targetID <<"_FOA.jpg";
+    string FOA_image_name = ssfoa.str();
+    ssfoa.str("");
+    imwrite(FOA_image_name, FOAImage);
 }

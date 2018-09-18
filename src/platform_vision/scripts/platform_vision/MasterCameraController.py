@@ -113,17 +113,20 @@ class MasterCameraController:
             self.motorPos.data = 0.0
             self.motorPublisher.publish(self.motorPos)
 
-    def moveToZero(self):
+    def moveToZero(self,pan_pose=0.0, tilt_pose=0.0):
         # self.saveDateAfterFinish()
+        rate = rospy.Rate(15) # 10hz
         for i in range(50):
-            self.motorPos[0].data = 0.0
-            self.motorPos[1].data = 0.0
-            self.currentPos = [0.0, 0.0]
+            self.motorPos[0].data = pan_pose
+            self.motorPos[1].data = tilt_pose
+            self.currentPos = [pan_pose, tilt_pose]
             self.motorPublisher.publish(self.motorPos[0])
             self.tiltMotorPublisher.publish(self.motorPos[1])
             self.TrackingData = []
             self.oldTime = 0.0
             self.timeDiff = 0.0
+            rate.sleep()
+
 
     def my_mouse_callback(self, event,x,y,flags,param):
         if event==cv2.EVENT_LBUTTONDOWN:
@@ -144,7 +147,8 @@ class MasterCameraController:
         else:
             pass
     def setTemplateImage(self, Template):
-        self.PNCC.setTemplate(Template)
+        # self.PNCC.setTemplate(Template)
+        self.PNCC.setTemplateSize2D(Template)
 
 
     def ideaToTrackCallback(self,data):

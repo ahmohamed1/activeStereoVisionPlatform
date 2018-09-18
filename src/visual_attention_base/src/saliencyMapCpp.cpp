@@ -38,6 +38,11 @@ FocalOfAttentionBasedWatershed FOA(false);
 
 #include "include/SaliencyMapHelpFunctions.h"
 
+float pointCloud_rms = 0.0;
+
+void rms_callback(const std_msgs::Float64 &msgs){
+  pointCloud_rms = msgs.data;
+}
 
 std::vector<string> machineStateStatusList = {"ComputeSaliency", // 0
                                               "GazeOnTarget",    // 1
@@ -86,20 +91,23 @@ int main(int argc,char** argv)
     GetImageClass rightImageSubClass(nh, "right");
     ros::Subscriber vergeStatueSubscriber = nh.subscribe("/right/onTarget" ,1, &vergeStatue_callback);
     ros::Subscriber targetPoseSubscriber = nh.subscribe("/targetPose" ,1, &targetPose_callback);
+    ros::Subscriber RMS_Subscriber = nh.subscribe("/pointCloud_rms", 1, &rms_callback);
 
     //Define the publisher
     MultipleMarkerPublisher multipleMarkerPublisher(nh);
     MotorController motorController(nh, "left", false);
     ros::Publisher templateSizePublisher = nh.advertise<geometry_msgs::Pose2D>("/templateSize", 1);
-    motorController.moveToZero();
+    motorController.moveToZero(0.0, -10);
     Mat temp, right_img;
     cv::Rect windowSizeRectangule = returnRectanguleSizeOfCenterImage(imageSize,windowSize);
 
-
+    ros::Duration(2).sleep();
+    // motorController.tiltGoto(-10);
+    // ros::Duration(2).sleep();
 
     namedWindow(windowsNameString, WINDOW_NORMAL);
     resizeWindow(windowsNameString,640,420);
-    cv::moveWindow(windowsNameString, 1000,20);
+    cv::moveWindow(windowsNameString, 1200,40);
 
     cv::namedWindow(saliencymapName, WINDOW_NORMAL);
     cv::resizeWindow(saliencymapName, 640,420);
@@ -112,7 +120,7 @@ int main(int argc,char** argv)
     std::vector<targetInformation> targetsListInformation;
     targetInformation targetdata;
     int imageSavedNumber = 1;
-    cv::Mat saliencyMapImage;
+    cv::Mat saliencyMapImage, FOAImage;
     bool checkToSaveData = false;
     while(nh.ok()){
         ros::spinOnce();
@@ -124,11 +132,12 @@ int main(int argc,char** argv)
             cout<<"//////////////////////////////////////////////////////"<<endl;
             // reset multipleMarkerPublisher to zero
             targetsListInformation.clear();
-            tie(targetList, saliencyMapImage) =  computeMultipleTargets(left_img);
+            tie(targetList, saliencyMapImage, FOAImage) =  computeMultipleTargets(left_img);
             motorState = false;
             targetNumber = 1;
             machineStateStatus = machineStateStatusList[1];
           }else if (targetList.size() > 0 && motorState==true && machineStateStatus == machineStateStatusList[0] || temp.empty()){
+            motorController.moveToZero(0.0, -10);
             cout<<"   Gaze on target ======>"<<endl;
             templateWithProbability _temp = targetList.back();
             targetList.pop_back();
@@ -158,7 +167,7 @@ int main(int argc,char** argv)
             cv::Mat editedImage;
             // cout<<left_img.size() <<endl;
             cv::Rect _tempRect;
-            tie(editedImage, difference, _tempRect) = gazeFastMatchTemplate.trackTargetPNCC(left_img, temp, 90);
+            tie(editedImage, difference, _tempRect) = gazeFastMatchTemplate.trackTargetPNCC(left_img, temp, 75);
             imshow(windowsNameString, editedImage);
 
             // std::cout<< "Difference: " << difference << endl;
@@ -201,7 +210,7 @@ int main(int argc,char** argv)
           if (machineStateStatus == machineStateStatusList[4]){
             cout <<"   Compute pointCloud ======>"<<endl;
             // Compute pointCloud
-            targetdata.probability3D = 80;
+            targetdata.probability3D = pointCloud_rms;
             machineStateStatus = machineStateStatusList[5];
           }
 
@@ -212,26 +221,29 @@ int main(int argc,char** argv)
             targetsListInformation.push_back(targetdata);
             multipleMarkerPublisher.publishMarker(targetsListInformation);
             machineStateStatus = machineStateStatusList[0];
-            // checkToSaveData = true;
+            checkToSaveData = true;
           }
 
       }// end of the if statment of the images
       char ikey;
       ikey = cv::waitKey(1);
       if(ikey == 'q'){
-        motorController.moveToZero();
+        motorController.moveToZero(0, -10);
         break;
       }
 
-      if(checkToSaveData){
+      if(checkToSaveData == true){
         cout << "Press s to save the data!!!" << endl;
         ikey = cv::waitKey(0);
         if(ikey == 's'){
-          saveData(left_img, right_img, temp, saliencyMapImage, imageSavedNumber);
+          saveData(left_img, right_img, temp, saliencyMapImage, FOAImage, imageSavedNumber);
           cout << "Data Saved Correctly" << endl;
           checkToSaveData = false;
           imageSavedNumber ++;
+        }else{
+          checkToSaveData = false;
         }
+
       }
 
       r.sleep();

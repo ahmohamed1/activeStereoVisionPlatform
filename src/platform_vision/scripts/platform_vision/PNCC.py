@@ -210,7 +210,7 @@ class FastMatchingPyramid:
         """
         ## Call fastTemplateMatchInPyramid()
         result = self.fastTemplateMatchPyramid(refimg, tplimg, maxleval)
-
+        centerPoint = (0,0)
         ## Analysis the result
         minval, maxval, minloc, maxloc = cv2.minMaxLoc(result)
         if maxval > 0.8:
@@ -240,7 +240,10 @@ class FastMatchingPyramid:
             else :
                 return dst, centerPoint
         else:
-            print("Cannot find the template in the origin image!")
+            # print("Cannot find the template in the origin image!")
+            dst = refimg.copy()
+            cv2.putText(dst ,"Cannot find the template in the origin image!",(2,2), 1, 1,(0,255,255),1,cv2.LINE_AA)
+            return dst, centerPoint
 
     def createWindows(self, imageName, imageToShow, WindowSize = (900,600)):
         lineSize = 20
