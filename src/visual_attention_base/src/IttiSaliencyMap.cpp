@@ -1,6 +1,6 @@
 /*
  * This implementation of saliency map (Itti, L.; Koch, C.; Niebur, E.; A Model of Saliency-Based Visual Attention for Rapid Scene Analysis, 1998)
- * was inspired by https://github.com/akisato-/saliencyMap.
+ * was inspired by https://github.com/VitaAmbroz/AutoCropApp/tree/5d283e77e21ad99e941b6030c595adeaba8bda09.
  */
 
 #include "include/visual_attention_base/IttiSaliencyMap.h"
